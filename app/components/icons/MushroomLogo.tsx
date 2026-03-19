@@ -1,0 +1,11 @@
+export default function MushroomLogo({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="16" cy="20" rx="7" ry="5" fill="#1a1a1a" />
+      <path d="M9 20 Q8 14 16 10 Q24 14 23 20" fill="#1a1a1a" />
+      <ellipse cx="16" cy="10.5" rx="9" ry="6.5" fill="#1a1a1a" />
+      <circle cx="12" cy="10" r="1.5" fill="white" opacity="0.4" />
+      <circle cx="19" cy="8.5" r="1" fill="white" opacity="0.4" />
+    </svg>
+  );
+}
