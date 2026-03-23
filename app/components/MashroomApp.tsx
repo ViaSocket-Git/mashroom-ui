@@ -1,55 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import ClusterView from "./ClusterView";
 import AIClientModal from "./AIClientModal";
-
-interface PowerUp {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Cluster {
-  id: string;
-  name: string;
-  client: string;
-  clientColor: string;
-  powerUps: PowerUp[];
-}
-
-const INITIAL_CLUSTERS: Cluster[] = [
-  {
-    id: "cluster-1",
-    name: "Cluster 1",
-    client: "Claude",
-    clientColor: "#D97757",
-    powerUps: [],
-  },
-  {
-    id: "cluster-2",
-    name: "Cluster 2",
-    client: "Windsurf",
-    clientColor: "#4F6AF5",
-    powerUps: [],
-  },
-  {
-    id: "cluster-3",
-    name: "Cluster 3",
-    client: "ChatGPT",
-    clientColor: "#10A37F",
-    powerUps: [],
-  },
-];
-
-let clusterCounter = 4;
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  setActiveCluster,
+  updateClusterClient,
+  addPowerUp,
+  createCluster,
+  setClusterSelectedClient,
+  fetchClusters,
+} from "@/lib/features/clustersSlice";
+import { fetchAiClients } from "@/lib/features/aiClientsSlice";
+import type { AiClient } from "@/lib/features/aiClientsSlice";
 
 export default function MashroomApp() {
-  const [clusters, setClusters] = useState<Cluster[]>(INITIAL_CLUSTERS);
-  const [activeClusterId, setActiveClusterId] = useState<string>("cluster-1");
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const clusters = useAppSelector((s) => s.clusters.clusters);
+  const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
+  const loading = useAppSelector((s) => s.clusters.loading);
+
+  useEffect(() => {
+    dispatch(fetchClusters());
+    dispatch(fetchAiClients());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (activeClusterId) {
+      router.push(`/cluster/${activeClusterId}`);
+    }
+  }, [activeClusterId]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp">("newCluster");
+  const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
 
   const activeCluster = clusters.find((c) => c.id === activeClusterId) ?? null;
 
@@ -63,46 +50,55 @@ export default function MashroomApp() {
     setIsModalOpen(true);
   }
 
-  function handleClientSelect(client: { id: string; name: string; color: string; icon: string }) {
+  function handleChangeClient() {
+    setModalMode("changeClient");
+    setIsModalOpen(true);
+  }
+
+  function handleClientSelect(client: AiClient) {
+    const clientColor = "#D97757";
     if (modalMode === "newCluster") {
-      const newCluster: Cluster = {
-        id: `cluster-${clusterCounter++}`,
-        name: `Cluster ${clusterCounter - 1}`,
-        client: client.name,
-        clientColor: client.color,
-        powerUps: [],
-      };
-      setClusters((prev) => [...prev, newCluster]);
-      setActiveClusterId(newCluster.id);
+      dispatch(createCluster({ client: client.title, clientColor, selectedClient: client }));
+    } else if (modalMode === "changeClient" && activeCluster) {
+      dispatch(updateClusterClient({
+        clusterId: activeCluster.id,
+        client: client.title,
+        clientColor,
+      }));
+      dispatch(setClusterSelectedClient({ clusterId: activeCluster.id, client }));
     } else if (modalMode === "addPowerUp" && activeCluster) {
-      const newPowerUp: PowerUp = {
-        id: `pu-${Date.now()}`,
-        name: `${client.name} Power-Up`,
-        description: `Connected to ${client.name}`,
-      };
-      setClusters((prev) =>
-        prev.map((c) =>
-          c.id === activeCluster.id
-            ? { ...c, powerUps: [...c.powerUps, newPowerUp] }
-            : c
-        )
-      );
+      dispatch(addPowerUp({
+        clusterId: activeCluster.id,
+        powerUp: {
+          id: `pu-${Date.now()}`,
+          name: `${client.title} Power-Up`,
+          description: `Connected to ${client.title}`,
+        },
+      }));
     }
     setIsModalOpen(false);
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
       <Sidebar
         clusters={clusters}
-        activeClusterId={activeClusterId}
-        onSelectCluster={setActiveClusterId}
+        activeClusterId={activeClusterId ?? ""}
+        onSelectCluster={(id) => {
+          dispatch(setActiveCluster(id));
+          router.push(`/cluster/${id}`);
+        }}
         onNewCluster={handleNewCluster}
       />
 
       <main className="flex-1 relative overflow-hidden">
+        {loading && (
+          <div className="absolute top-4 right-4 z-10 text-xs px-3 py-1.5 rounded" style={{ background: "rgb(243,244,246)", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif" }}>
+            Creating cluster…
+          </div>
+        )}
         {activeCluster ? (
-          <ClusterView cluster={activeCluster} onAddPowerUp={handleAddPowerUp} />
+          <ClusterView cluster={activeCluster} onAddPowerUp={handleAddPowerUp} onChangeClient={handleChangeClient} />
         ) : (
           <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm">
             Select or create a cluster to get started.

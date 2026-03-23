@@ -1,12 +1,23 @@
 "use client";
 
-import { Plus, HelpCircle, User, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, LifeBuoy, User, ArrowRight, LogOut, Mail, X } from "lucide-react";
+import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/lib/hooks";
+
+interface AiClient {
+  id: string;
+  title: string;
+  icon: string;
+}
 
 interface Cluster {
   id: string;
   name: string;
   client: string;
   clientColor: string;
+  selectedClient: AiClient | null;
 }
 
 interface SidebarProps {
@@ -16,20 +27,129 @@ interface SidebarProps {
   onNewCluster: () => void;
 }
 
-function ClientDot({ color }: { color: string }) {
-  if (color === "#D97757") {
+function AccountPanel({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const token = getFromCookies("proxy_token") ?? "dUd1V25UazNIWk5nRStLaFhVbnYrZnRMQng3SVZtcG52ajNKTlVDNkFLZXVTVEpwVDc0dm5YeVJXSXlaU3cxeFJveHRkTUtSWERoWWJJMWpRNi9oRzdLRzB4azlVWVY4TWlPWTZWUnVuQVVKOEtPWjVEcC82SE5SNkN6a2tLaTdjQnEvQndpOFJHOE5TZTJwdUdpNzlrTStqYU05b01BMkdRNEtjdndiUmJkWnhYZGM4VG9qdVZ1cU1CQ0dQdG1N";
+    fetch("https://routes.msg91.com/api/c/getDetails?exclude_role_ids=20", {
+      headers: {
+        "accept": "application/json, text/plain, */*",
+        "proxy_auth_token": token,
+      },
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        const user = res?.data?.[0];
+        if (user) {
+          setName(user.name ?? "");
+          setEmail(user.email ?? "");
+        }
+      })
+      .catch(() => {
+        setName(getFromCookies("user_name") ?? "");
+        setEmail(getFromCookies("user_email") ?? "");
+      })
+      .finally(() => setLoadingUser(false));
+  }, []);
+
+  function handleLogout() {
+    removeCookie("proxy_token");
+    removeCookie("local_token");
+    router.replace("/login");
+  }
+
+  return (
+    <div
+      className="absolute left-0 z-50 flex flex-col"
+      style={{ bottom: "calc(100% + 6px)", width: 240, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "0 -4px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)" }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
+        <span style={{ fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, color: "rgb(10,10,10)" }}>Account</span>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgb(148,163,184)", lineHeight: 0, padding: 2 }}>
+          <X width={14} height={14} strokeWidth={2} />
+        </button>
+      </div>
+
+      <div className="px-4 py-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
+            <User width={14} height={14} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
+          </div>
+          {loadingUser ? (
+            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+              <div style={{ height: 11, borderRadius: 4, background: "rgb(226,232,240)", width: "70%", animation: "pulse 1.4s ease-in-out infinite" }} />
+              <div style={{ height: 9, borderRadius: 4, background: "rgb(226,232,240)", width: "90%", animation: "pulse 1.4s ease-in-out infinite", animationDelay: "0.1s" }} />
+            </div>
+          ) : (
+            <div className="flex-1 min-w-0">
+              <p className="truncate" style={{ fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, color: name ? "rgb(10,10,10)" : "rgb(148,163,184)", margin: 0 }}>
+                {name || "No name set"}
+              </p>
+              {email && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Mail width={10} height={10} style={{ color: "rgb(148,163,184)", flexShrink: 0 }} />
+                  <p className="truncate" style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: 0 }}>{email}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-2 py-2">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2.5 px-3 py-2 w-full cursor-pointer text-left"
+          style={{ background: "transparent", border: "none", borderRadius: 4, color: "rgb(220,38,38)", fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 500 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgb(254,242,242)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+        >
+          <LogOut width={13} height={13} strokeWidth={2} />
+          Log out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ClusterIcon({ cluster, active }: { cluster: Cluster; active: boolean }) {
+  if (cluster.selectedClient?.icon) {
     return (
-      <svg viewBox="0 0 16 16" className="w-4 h-4 shrink-0" fill="none">
-        <path d="M8 1L2 4.5v7L8 15l6-3.5v-7L8 1z" fill="#D97757" />
-        <path d="M8 4l-3 1.75v3.5L8 11l3-1.75V5.75L8 4z" fill="#F5A98A" />
-      </svg>
+      <div style={{ width: 20, height: 20, flexShrink: 0, borderRadius: 4, overflow: "hidden" }}>
+        <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
     );
   }
+  const color = cluster.clientColor;
+  if (color === "#D97757") {
+    return (
+      <div style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+          <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#D97757" />
+          <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#c4663e" />
+          <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#D97757" />
+          <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
+          <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
+          <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
+          <line x1="18" y1="26" x2="32" y2="16" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+          <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+  const iconColor = active ? color : "#c4c9d4";
+  const stemColor = active ? color : "#d0d4db";
   return (
-    <span
-      className="w-3.5 h-3.5 rounded-full shrink-0 inline-block"
-      style={{ background: color }}
-    />
+    <div style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+        <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill={iconColor} />
+        <path d="M24 38H40V54C40 56.2 38.2 58 36 58H28C25.8 58 24 56.2 24 54V38Z" fill={stemColor} />
+      </svg>
+    </div>
   );
 }
 
@@ -39,68 +159,177 @@ export default function Sidebar({
   onSelectCluster,
   onNewCluster,
 }: SidebarProps) {
+  const clustersLoading = useAppSelector((s) => s.clusters.loading);
+  const [wasLoading, setWasLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(clusters.length > 0);
+  const [showAccount, setShowAccount] = useState(false);
+
+  useEffect(() => {
+    if (clusters.length > 0) { setHasFetched(true); return; }
+    if (clustersLoading) setWasLoading(true);
+    if (!clustersLoading && wasLoading) setHasFetched(true);
+  }, [clustersLoading, wasLoading, clusters.length]);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setShowAccount(false);
+      }
+    }
+    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAccount]);
+
   return (
-    <aside className="w-[175px] min-w-[175px] bg-white border-r border-gray-200 flex flex-col h-full">
+    <aside
+      className="shrink-0 h-screen sticky top-0 flex flex-col border-r"
+      style={{ width: 260, background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)" }}
+    >
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 36 36" className="w-8 h-8" fill="none">
-            <ellipse cx="18" cy="24" rx="8" ry="5.5" fill="#1a1a1a" />
-            <ellipse cx="18" cy="13" rx="11" ry="8" fill="#1a1a1a" />
-            <circle cx="14" cy="11.5" r="2" fill="white" opacity="0.3" />
-            <circle cx="22" cy="10" r="1.2" fill="white" opacity="0.3" />
-            <rect x="14.5" y="18" width="7" height="11" rx="1.5" fill="#1a1a1a" />
-          </svg>
-          <div>
-            <p className="font-bold text-sm text-base-content leading-tight">Mushrooms</p>
-            <p className="text-[9px] text-base-content/40 tracking-widest uppercase font-medium">by viasocket</p>
+      <div className="px-5 flex items-center gap-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
+        <a className="flex items-center gap-2.5 no-underline h-16" href="/">
+          <div className="w-8 h-8 flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
+              <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#1a1a1a" />
+              <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#0a0a0a" />
+              <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="#1a1a1a" opacity="0.3" />
+              <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
+              <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
+              <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
+              <line x1="18" y1="26" x2="32" y2="16" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+              <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+            </svg>
           </div>
+          <div className="flex flex-col">
+            <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
+            <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
+          </div>
+        </a>
+      </div>
+
+      {/* Cluster list + New Cluster */}
+      <div className="px-3 pt-4 flex-1 overflow-y-auto relative">
+        <div className="mb-4">
+          <button
+            onClick={onNewCluster}
+            className="flex items-center gap-2 cursor-pointer w-full justify-center"
+            style={{
+              background: "rgb(255,255,255)",
+              color: "rgb(10,10,10)",
+              border: "1px solid rgb(196,201,212)",
+              boxShadow: "none",
+              fontSize: 14,
+              padding: "10px 36px",
+              height: 34,
+              fontFamily: "Geist, sans-serif",
+              fontWeight: 600,
+              letterSpacing: "-0.01em",
+              borderRadius: 4,
+              transition: "box-shadow 0.15s",
+            }}
+          >
+            <Plus width={14} height={14} strokeWidth={2.5} />
+            New Cluster
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          {!hasFetched && (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-2.5 px-3 py-2" style={{ borderRadius: 4, height: 36 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 4, background: "rgb(226,232,240)", flexShrink: 0, animation: "pulse 1.4s ease-in-out infinite" }} />
+                <div style={{ flex: 1, height: 11, borderRadius: 4, background: "rgb(226,232,240)", animation: "pulse 1.4s ease-in-out infinite", animationDelay: "0.1s" }} />
+              </div>
+            ))
+          )}
+          {clusters.map((cluster) => {
+            const isActive = activeClusterId === cluster.id;
+            return (
+              <div key={cluster.id} className="relative">
+                <button
+                  onClick={() => onSelectCluster(cluster.id)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
+                  style={{
+                    borderRadius: 4,
+                    background: isActive ? "rgb(240,241,243)" : "transparent",
+                    color: isActive ? "rgb(10,10,10)" : "rgb(100,116,139)",
+                    fontFamily: '"DM Sans", sans-serif',
+                    border: isActive ? "1px solid rgb(208,212,219)" : "1px solid rgb(232,235,240)",
+                    boxShadow: isActive ? "rgba(0,0,0,0.06) 0px 1px 3px" : "none",
+                    fontWeight: isActive ? 600 : 400,
+                    transition: "0.15s",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ClusterIcon cluster={cluster} active={isActive} />
+                  <span className="flex-1 truncate">{cluster.name}</span>
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* New Cluster */}
-      <div className="px-3 pt-3">
+      {/* Explore Embed */}
+      <div className="px-3 pb-2">
         <button
-          onClick={onNewCluster}
-          className="w-full flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 cursor-pointer w-full justify-center"
+          style={{
+            background: "rgb(255,255,255)",
+            color: "rgb(10,10,10)",
+            border: "1px solid rgb(196,201,212)",
+            boxShadow: "none",
+            fontSize: 14,
+            padding: "10px 18px",
+            height: 34,
+            fontFamily: "Geist, sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            borderRadius: 4,
+            transition: "box-shadow 0.15s",
+          }}
         >
-          <Plus className="w-3.5 h-3.5" />
-          New Cluster
+          Explore Embed
+          <ArrowRight width={13} height={13} strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Cluster list */}
-      <nav className="flex-1 px-3 pt-2 overflow-y-auto">
-        {clusters.map((cluster) => (
-          <button
-            key={cluster.id}
-            onClick={() => onSelectCluster(cluster.id)}
-            className={`w-full flex items-center gap-2 px-2.5 py-[7px] rounded-lg text-sm font-medium transition-all mb-0.5 text-left ${
-              activeClusterId === cluster.id
-                ? "bg-gray-100 text-gray-900"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <ClientDot color={cluster.clientColor} />
-            <span className="truncate">{cluster.name}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* Bottom actions */}
-      <div className="px-3 pb-4 mt-auto">
-        <button className="w-full flex items-center justify-between h-9 px-3 mb-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-          <span>Explore Embed</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
-        <button className="w-full flex items-center gap-2 px-2 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
-          <HelpCircle className="w-4 h-4" />
+      {/* Support + Account */}
+      <div className="px-3 py-2.5 border-t flex flex-col gap-0.5" style={{ borderColor: "rgb(226,232,240)" }}>
+        <button
+          className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer text-left w-full"
+          style={{
+            background: "transparent",
+            color: "rgb(100,116,139)",
+            fontFamily: '"DM Sans", sans-serif',
+            borderRadius: 4,
+            border: 0,
+            transition: "box-shadow 0.15s, background 0.15s, border-color 0.15s",
+          }}
+        >
+          <LifeBuoy width={15} height={15} strokeWidth={2} />
           Support
         </button>
-        <button className="w-full flex items-center gap-2 px-2 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
-          <User className="w-4 h-4" />
-          Account
-        </button>
+        <div ref={accountRef} className="relative">
+          {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+          <button
+            onClick={() => setShowAccount((v) => !v)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer text-left w-full"
+            style={{
+              background: showAccount ? "rgb(243,244,246)" : "transparent",
+              color: showAccount ? "rgb(10,10,10)" : "rgb(100,116,139)",
+              fontFamily: '"DM Sans", sans-serif',
+              borderRadius: 4,
+              border: 0,
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            <User width={15} height={15} strokeWidth={2} />
+            Account
+          </button>
+        </div>
       </div>
     </aside>
   );
