@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = "edge";
+
 import React, { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setInCookies } from "@/lib/utils/cookies";

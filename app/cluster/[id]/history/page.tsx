@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = "edge";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -77,7 +79,7 @@ export default function HistoryPage() {
     : DUMMY_HISTORY.filter((h) => h.status === "failed");
 
   function handleClientSelect(client: AiClient) {
-    dispatch(createCluster({ client: client.title, clientColor: "#D97757" }));
+    dispatch(createCluster({ client: client.title, clientColor: "#D97757", selectedClient: client }));
     setIsModalOpen(false);
   }
 
