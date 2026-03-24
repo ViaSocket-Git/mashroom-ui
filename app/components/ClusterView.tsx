@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, Server, History, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, User } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
@@ -312,9 +312,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: ClusterViewProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const isHistory = pathname?.endsWith("/history");
 
   const [showPanel, setShowPanel] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -414,36 +412,6 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center" style={{ gap: 4, background: "rgb(243,244,246)", borderRadius: 8, padding: "3px" }}>
-              <button
-                onClick={() => router.push(`/cluster/${cluster.id}`)}
-                className="flex items-center gap-1.5 cursor-pointer"
-                style={{
-                  fontSize: 13, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em",
-                  padding: "5px 14px", borderRadius: 6, border: "none",
-                  background: !isHistory ? "rgb(255,255,255)" : "transparent",
-                  color: !isHistory ? "rgb(10,10,10)" : "rgb(100,116,139)",
-                  boxShadow: !isHistory ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                }}
-              >
-                <Server width={13} height={13} strokeWidth={2} />
-                Cluster
-              </button>
-              <button
-                onClick={() => router.push(`/cluster/${cluster.id}/history`)}
-                className="flex items-center gap-1.5 cursor-pointer"
-                style={{
-                  fontSize: 13, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em",
-                  padding: "5px 14px", borderRadius: 6, border: "none",
-                  background: isHistory ? "rgb(255,255,255)" : "transparent",
-                  color: isHistory ? "rgb(10,10,10)" : "rgb(100,116,139)",
-                  boxShadow: isHistory ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                }}
-              >
-                <History width={13} height={13} strokeWidth={2} />
-                History
-              </button>
-            </div>
 
             <div className="flex-1 min-w-0 flex justify-end items-center gap-1.5">
               <button
