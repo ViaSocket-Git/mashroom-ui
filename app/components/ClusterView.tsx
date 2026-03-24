@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, Server, History, User } from "lucide-react";
-import PowerUpPanel from "./PowerUpPanel";
+
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
+import { upsertTool } from "../../lib/features/toolsSlice";
+import { toolApi } from "../../lib/api/toolApi";
 
 interface PowerUp {
   id: string;
@@ -311,6 +313,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: ClusterViewProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const isHistory = pathname?.endsWith("/history");
 
   const [showPanel, setShowPanel] = useState(false);
@@ -340,6 +343,63 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
     if (toolsLoading) setToolsWasLoading(true);
     if (!toolsLoading && toolsWasLoading) setToolsHasFetched(true);
   }, [toolsLoading, toolsWasLoading]);
+
+  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
+  const embedScriptLoaded = useRef(false);
+  const [embedReady, setEmbedReady] = useState(false);
+
+  useEffect(() => {
+    async function handleMessage(e: MessageEvent) {
+      if (e.data?.type === "send_embed_data") {
+        setEmbedReady(true);
+      }
+      if (!e.data?.webhookurl) return;
+      const action = e.data?.action;
+      if (action === "published" || action === "paused" || action === "created" || action === "updated" || action === "deleted") {
+        try {
+          const res = await toolApi.callTool({
+            flowId: (e.data.id as string) ?? "",
+            payload: { body: {} },
+            desc: (e.data.description as string) || (e.data.title as string) || "",
+            status: (e.data.action as string) ?? (e.data.status as string) ?? "active",
+            title: (e.data.title as string) ?? "",
+            mcpServerId: cluster.id,
+          });
+          if (res.data?.data) dispatch(upsertTool(res.data.data));
+        } catch (err) {
+          console.error("[ClusterView] MCP tool API error:", err);
+        }
+      }
+    }
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [cluster.id, dispatch]);
+
+  useEffect(() => {
+    if (!embedToken || embedScriptLoaded.current) return;
+    const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
+    if (existing) existing.parentNode?.removeChild(existing);
+    const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
+    if (existingContainer) existingContainer.parentNode?.removeChild(existingContainer);
+    const script = document.createElement("script");
+    script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
+    script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
+    script.setAttribute("embedToken", embedToken);
+    script.setAttribute("parentId", "viasocketParentId");
+    document.body.appendChild(script);
+    embedScriptLoaded.current = true;
+    return () => {
+      try {
+        const s = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
+        if (s?.parentNode === document.body) document.body.removeChild(s);
+        const container = document.getElementById("iframe-viasocket-embed-parent-container");
+        if (container) container.parentNode?.removeChild(container);
+      } catch (e) {
+        console.warn("Error removing embed script:", e);
+      }
+      embedScriptLoaded.current = false;
+    };
+  }, [embedToken]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
@@ -480,38 +540,63 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
               className="flex-1 min-h-0 overflow-hidden flex flex-col relative"
               style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderTop: "1px solid rgb(226,232,240)", borderRadius: "0 0 6px 6px", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
             >
-              <div className="shrink-0 px-3 pt-3 pb-3">
-                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                  <button
-                    onClick={() => setShowPanel((v) => !v)}
-                    className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
-                    style={{ background: showPanel ? "rgb(245,245,245)" : "rgb(250,251,252)", border: showPanel ? "2px dashed rgb(10,10,10)" : "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s", borderRadius: 4 }}
-                  >
-                    <div className="flex items-center gap-2.5 px-3 py-3">
-                      <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
-                        <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
+              {!showPanel && (
+                <div className="shrink-0 px-3 pt-3 pb-3">
+                  <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+                    <button
+                      onClick={() => setShowPanel(true)}
+                      className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
+                      style={{ background: "rgb(250,251,252)", border: "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s", borderRadius: 4 }}
+                    >
+                      <div className="flex items-center gap-2.5 px-3 py-3">
+                        <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
+                          <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
-                      </div>
-                    </div>
-                  </button>
-                  {!toolsHasFetched
-                    ? [1, 2, 3].map((i) => (
-                        <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
-                      ))
-                    : <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} />}
-                </div>
-              </div>
-
-              {showPanel && (
-                <div className="absolute inset-0 z-20" style={{ borderRadius: 8 }}>
-                  <PowerUpPanel
-                    onClose={() => setShowPanel(false)}
-                    onSelect={(app) => { onAddPowerUp(); setShowPanel(false); }}
-                  />
+                    </button>
+                    {!toolsHasFetched
+                      ? [1, 2, 3].map((i) => (
+                          <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
+                        ))
+                      : <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} />}
+                  </div>
                 </div>
               )}
+
+              {/* #viasocketParentId always in DOM so embed script finds it on load */}
+              <div
+                className="absolute inset-0 z-20"
+                style={{
+                  visibility: showPanel ? "visible" : "hidden",
+                  pointerEvents: showPanel ? "auto" : "none",
+                  flexDirection: "column",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  display: "flex",
+                }}
+              >
+                {/* Panel header — shown only after embed iframe is ready */}
+                {embedReady && (
+                  <div
+                    className="shrink-0 flex items-center justify-between px-4"
+                    style={{ height: 44, borderBottom: "1px solid rgb(226,232,240)", background: "rgb(250,251,252)", borderRadius: "6px 6px 0 0" }}
+                  >
+                    <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "-0.01em" }}></span>
+                    <button
+                      onClick={() => setShowPanel(false)}
+                      className="flex items-center justify-center cursor-pointer"
+                      style={{ background: "transparent", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 6, borderRadius: 4 }}
+                    >
+                      <X width={18} height={18} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                )}
+                {/* Embed mounts here */}
+                <div id="viasocketParentId" className="flex-1 min-h-0 w-full" />
+              </div>
 
               {!showPanel && toolsHasFetched && tools.length === 0 && (
                 <div className="flex-1 flex flex-col items-center justify-center text-center px-10">

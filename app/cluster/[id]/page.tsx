@@ -63,11 +63,11 @@ export default function ClusterPage() {
   }, [id, activeClusterId, dispatch]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !cluster) return;
     dispatch(fetchEmbedToken(id)).then(() => {
-      dispatch(fetchTools({ mcpServerId: id, projectId: "" }));
+      dispatch(fetchTools({ mcpServerId: id }));
     });
-  }, [id, dispatch]);
+  }, [id, cluster?.projectId, dispatch]);
 
   function handleNewCluster() {
     setModalMode("newCluster");
@@ -87,7 +87,10 @@ export default function ClusterPage() {
   function handleClientSelect(client: AiClient) {
     const clientColor = "#D97757";
     if (modalMode === "newCluster") {
-      dispatch(createCluster({ client: client.title, clientColor, selectedClient: client }));
+      dispatch(createCluster({ client: client.title, clientColor, selectedClient: client })).then((action: any) => {
+        const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
+        if (newId) router.push(`/cluster/${newId}`);
+      });
     } else if (modalMode === "changeClient" && cluster) {
       dispatch(updateClusterClient({ clusterId: cluster.id, client: client.title, clientColor }));
       dispatch(setClusterSelectedClient({ clusterId: cluster.id, client }));

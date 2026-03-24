@@ -74,7 +74,10 @@ export default function MashroomApp() {
   function handleClientSelect(client: AiClient) {
     const clientColor = "#D97757";
     if (modalMode === "newCluster") {
-      dispatch(createCluster({ client: client.title, clientColor, selectedClient: client }));
+      dispatch(createCluster({ client: client.title, clientColor, selectedClient: client })).then((action: any) => {
+        const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
+        if (newId) router.push(`/cluster/${newId}`);
+      });
     } else if (modalMode === "changeClient" && activeCluster) {
       dispatch(updateClusterClient({
         clusterId: activeCluster.id,
@@ -117,8 +120,52 @@ export default function MashroomApp() {
         {activeCluster ? (
           <ClusterView cluster={activeCluster} onAddPowerUp={handleAddPowerUp} onChangeClient={handleChangeClient} />
         ) : (
-          <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm">
-            Select or create a cluster to get started.
+          <div className="flex-1 flex flex-col items-center justify-center h-full" style={{ background: "rgb(248,249,251)" }}>
+            <div className="flex flex-col items-center gap-5" style={{ maxWidth: 420 }}>
+              {/* Mushroom icon */}
+              <div className="w-14 h-14 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
+                <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+                  <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(180,186,196)" />
+                  <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(160,166,176)" />
+                  <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(180,186,196)" />
+                </svg>
+              </div>
+
+              {/* Heading */}
+              <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 800, fontSize: 28, color: "rgb(10,10,10)", letterSpacing: "-0.03em", margin: 0, textAlign: "center" }}>
+                Power up your AI
+              </p>
+
+              {/* CTA button */}
+              <button
+                onClick={handleNewCluster}
+                className="flex items-center gap-2 cursor-pointer"
+                style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", fontSize: 14, padding: "0 22px", height: 40, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 6 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Create your first cluster
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+              </button>
+
+              {/* Steps */}
+              <div className="flex items-center gap-3 mt-2">
+                {[
+                  { step: "STEP 1", label: "Pick your power-ups" },
+                  { step: "STEP 2", label: "Your AI absorbs them" },
+                  { step: "STEP 3", label: "Actions on autopilot" },
+                ].map(({ step, label }, i) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span style={{ fontFamily: "Geist, sans-serif", fontSize: 9, fontWeight: 600, color: "rgb(148,163,184)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{step}</span>
+                      <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", whiteSpace: "nowrap" }}>{label}</span>
+                    </div>
+                    {i < 2 && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(196,201,212)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </main>

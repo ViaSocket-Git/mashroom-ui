@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { X } from "lucide-react";
 import { toolApi } from "../../lib/api/toolApi";
@@ -32,7 +32,6 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
   const params = useParams();
   const mcpServerId = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
   const dispatch = useAppDispatch();
-  const scriptLoaded = useRef(false);
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[mcpServerId] ?? null);
 
   useEffect(() => {
@@ -66,32 +65,6 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
       window.removeEventListener("message", handleMessage);
     };
   }, [mcpServerId, dispatch]);
-
-  useEffect(() => {
-    if (!embedToken || scriptLoaded.current) return;
-    const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-    if (existing) existing.parentNode?.removeChild(existing);
-    const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
-    if (existingContainer) existingContainer.parentNode?.removeChild(existingContainer);
-    const script = document.createElement("script");
-    script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
-    script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
-    script.setAttribute("embedToken", embedToken);
-    script.setAttribute("parentId", EMBED_PARENT_ID);
-    document.body.appendChild(script);
-    scriptLoaded.current = true;
-    return () => {
-      try {
-        const s = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-        if (s?.parentNode === document.body) document.body.removeChild(s);
-        const container = document.getElementById("iframe-viasocket-embed-parent-container");
-        if (container) container.parentNode?.removeChild(container);
-      } catch (e) {
-        console.warn("Error removing embed script:", e);
-      }
-      scriptLoaded.current = false;
-    };
-  }, [embedToken]);
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>

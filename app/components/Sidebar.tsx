@@ -143,6 +143,20 @@ export default function Sidebar({
               </div>
             ))
           )}
+          {hasFetched && clusters.length === 0 && (
+            <div className="flex flex-col items-center gap-2 px-2 py-4" style={{ background: "rgb(248,249,251)", border: "1px solid rgb(226,232,240)", borderRadius: 6 }}>
+              <div className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
+                <svg width="18" height="18" viewBox="0 0 64 64" fill="none">
+                  <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(180,186,196)" />
+                  <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(160,166,176)" />
+                  <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(180,186,196)" />
+                </svg>
+              </div>
+              <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: 0, textAlign: "center", lineHeight: 1.4 }}>
+                No clusters yet. Create one to start powering up your AI.
+              </p>
+            </div>
+          )}
           {clusters.map((cluster) => {
             const isActive = activeClusterId === cluster.id;
             return (

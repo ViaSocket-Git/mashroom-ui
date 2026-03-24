@@ -33,22 +33,26 @@ const initialState: ToolsState = {
 
 export const fetchTools = createAsyncThunk(
   "tools/fetchTools",
-  async ({ mcpServerId, projectId }: { mcpServerId: string; projectId: string }, { getState }) => {
-    const state = getState() as { clusters: { embedTokenByClusterId: Record<string, string> } };
-    const embedToken = state.clusters.embedTokenByClusterId[mcpServerId] ?? "";
-    const res = await integrationsApi.getIntegrations(projectId || "projXzlaXL3n", embedToken);
-    const flows: IntegrationFlow[] = res.data?.data?.flows ?? [];
-    const tools: Tool[] = flows.map((flow) => ({
-      name: flow.title,
-      mcpServerId,
-      flowId: flow.id,
-      description: flow.description ?? "",
-      inputParameters: Object.keys(flow.mcpToolJson?.inputSchema?.properties ?? {}),
-      createdAt: "",
-      updatedAt: "",
-      serviceIcons: flow.serviceIcons ?? [],
-    }));
-    return { mcpServerId, tools };
+  async ({ mcpServerId }: { mcpServerId: string }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { clusters: { embedTokenByClusterId: Record<string, string> } };
+      const embedToken = state.clusters.embedTokenByClusterId[mcpServerId] ?? "";
+      const res = await integrationsApi.getIntegrations(embedToken);
+      const flows: IntegrationFlow[] = res.data?.data?.flows ?? [];
+      const tools: Tool[] = flows.map((flow) => ({
+        name: flow.title,
+        mcpServerId,
+        flowId: flow.id,
+        description: flow.description ?? "",
+        inputParameters: Object.keys(flow.mcpToolJson?.inputSchema?.properties ?? {}),
+        createdAt: "",
+        updatedAt: "",
+        serviceIcons: flow.serviceIcons ?? [],
+      }));
+      return { mcpServerId, tools };
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
+    }
   }
 );
 
