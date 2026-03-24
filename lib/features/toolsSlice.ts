@@ -33,8 +33,10 @@ const initialState: ToolsState = {
 
 export const fetchTools = createAsyncThunk(
   "tools/fetchTools",
-  async ({ mcpServerId, projectId }: { mcpServerId: string; projectId: string }) => {
-    const res = await integrationsApi.getIntegrations(projectId || "projXzlaXL3n");
+  async ({ mcpServerId, projectId }: { mcpServerId: string; projectId: string }, { getState }) => {
+    const state = getState() as { clusters: { embedTokenByClusterId: Record<string, string> } };
+    const embedToken = state.clusters.embedTokenByClusterId[mcpServerId] ?? "";
+    const res = await integrationsApi.getIntegrations(projectId || "projXzlaXL3n", embedToken);
     const flows: IntegrationFlow[] = res.data?.data?.flows ?? [];
     const tools: Tool[] = flows.map((flow) => ({
       name: flow.title,

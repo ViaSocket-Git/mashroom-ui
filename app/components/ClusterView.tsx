@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, Server, History } from "lucide-react";
+import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, Server, History, User } from "lucide-react";
 import PowerUpPanel from "./PowerUpPanel";
-import { useAppSelector } from "../../lib/hooks";
+import AccountPanel from "./AccountPanel";
+import { useAppSelector, useAppDispatch } from "../../lib/hooks";
+import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 
 interface PowerUp {
   id: string;
@@ -35,16 +37,20 @@ interface ClusterViewProps {
   onChangeClient: () => void;
 }
 
-const EMBED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOiI1NTkzIiwicHJvamVjdF9pZCI6InByb2o5TGZRdjRUNyIsInVzZXJfaWQiOiI2MTg5MCIsImlhdCI6MTc3NDAxMDI3M30.rhl0-Hfq5k9SAH3Zali9qdNl7s-EWKvxkVsL3Xaq5Qs";
-
-
 function ToolCards({ clusterId, onOpenPanel }: { clusterId: string; onOpenPanel: () => void }) {
+  const dispatch = useAppDispatch();
   const tools = useAppSelector((s) => s.tools.byMcpServerId[clusterId] ?? []);
+  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[clusterId] ?? null);
+
+  useEffect(() => {
+    if (!embedToken) dispatch(fetchEmbedToken(clusterId));
+  }, [clusterId, embedToken, dispatch]);
+
   if (tools.length === 0) return null;
 
   function handleToolClick(tool: { flowId: string }) {
-    if ((window as any).openViasocket) {
-      (window as any).openViasocket(tool.flowId, { embedToken: EMBED_TOKEN });
+    if ((window as any).openViasocket && embedToken) {
+      (window as any).openViasocket(tool.flowId, { embedToken });
     }
     onOpenPanel();
   }
@@ -310,6 +316,18 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
   const [showPanel, setShowPanel] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [headerHovered, setHeaderHovered] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setShowAccount(false);
+      }
+    }
+    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAccount]);
 
   const tools = useAppSelector((s) => s.tools.byMcpServerId[cluster.id] ?? []);
   const toolsLoading = useAppSelector((s) => s.tools.loadingFor[cluster.id] ?? false);
@@ -375,6 +393,16 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                 <Share2 width={14} height={14} strokeWidth={2.5} />
                 Share
               </button>
+              <div ref={accountRef} className="relative">
+                {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+                <button
+                  onClick={() => setShowAccount((v) => !v)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                >
+                  <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -382,13 +410,12 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
 
       {/* Content */}
       <div className="flex-1 min-h-0 px-24 pt-4 pb-3 flex justify-center overflow-hidden">
-        <div className="w-full flex flex-col gap-4 h-full">
+        <div className="w-full flex flex-col h-full">
 
           {/* Client card */}
-          <div className="shrink-0">
             <div
               className="overflow-visible relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", borderRadius: 6 }}
+              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderBottom: "none", boxShadow: "none", borderRadius: "6px 6px 0 0" }}
               onMouseEnter={() => setHeaderHovered(true)}
               onMouseLeave={() => setHeaderHovered(false)}
             >
@@ -447,13 +474,11 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                 </div>
               </div>
             </div>
-          </div>
-
           {/* Power-ups area */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             <div
               className="flex-1 min-h-0 overflow-hidden flex flex-col relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
+              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderTop: "1px solid rgb(226,232,240)", borderRadius: "0 0 6px 6px", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
             >
               <div className="shrink-0 px-3 pt-3 pb-3">
                 <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>

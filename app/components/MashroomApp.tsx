@@ -13,6 +13,8 @@ import {
   createCluster,
   setClusterSelectedClient,
   fetchClusters,
+  updateClusterOnServer,
+  fetchCurrentUser,
 } from "@/lib/features/clustersSlice";
 import { fetchAiClients } from "@/lib/features/aiClientsSlice";
 import type { AiClient } from "@/lib/features/aiClientsSlice";
@@ -23,11 +25,25 @@ export default function MashroomApp() {
   const clusters = useAppSelector((s) => s.clusters.clusters);
   const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
   const loading = useAppSelector((s) => s.clusters.loading);
+  const userIdLoaded = useAppSelector((s) => s.clusters.userId !== null);
+  const aiClientsLoaded = useAppSelector((s) => s.aiClients.clients.length > 0);
+  const clustersLoaded = useAppSelector((s) => s.clusters.clusters.length > 0);
 
   useEffect(() => {
-    dispatch(fetchClusters());
-    dispatch(fetchAiClients());
-  }, [dispatch]);
+    if (!userIdLoaded) {
+      dispatch(fetchCurrentUser()).then(() => {
+        dispatch(fetchAiClients()).then(() => {
+          if (!clustersLoaded) dispatch(fetchClusters());
+        });
+      });
+    } else if (!aiClientsLoaded) {
+      dispatch(fetchAiClients()).then(() => {
+        if (!clustersLoaded) dispatch(fetchClusters());
+      });
+    } else if (!clustersLoaded) {
+      dispatch(fetchClusters());
+    }
+  }, [dispatch, userIdLoaded, aiClientsLoaded, clustersLoaded]);
 
   useEffect(() => {
     if (activeClusterId) {
@@ -66,6 +82,7 @@ export default function MashroomApp() {
         clientColor,
       }));
       dispatch(setClusterSelectedClient({ clusterId: activeCluster.id, client }));
+      dispatch(updateClusterOnServer({ mcpServerId: activeCluster.id, name: activeCluster.name, client: client.title }));
     } else if (modalMode === "addPowerUp" && activeCluster) {
       dispatch(addPowerUp({
         clusterId: activeCluster.id,

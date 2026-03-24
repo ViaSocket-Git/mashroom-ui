@@ -1,9 +1,8 @@
 import axiosInstance from "./axiosInstance";
 
-const TOOL_API_URL = "https://flow-api.viasocket.com/mcp/tool";
+const TOOL_API_URL = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/tool`;
 
 export interface McpToolPayload {
-  userId: string;
   flowId: string;
   payload: Record<string, unknown>;
   desc: string;

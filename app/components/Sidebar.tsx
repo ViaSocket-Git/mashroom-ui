@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Plus, LifeBuoy, User, ArrowRight, LogOut, Mail, X } from "lucide-react";
-import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
+import { useState, useEffect } from "react";
+import { Plus, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/lib/hooks";
 
@@ -25,95 +24,6 @@ interface SidebarProps {
   activeClusterId: string | null;
   onSelectCluster: (id: string) => void;
   onNewCluster: () => void;
-}
-
-function AccountPanel({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [loadingUser, setLoadingUser] = useState(true);
-
-  useEffect(() => {
-    const token = getFromCookies("proxy_token") ?? "dUd1V25UazNIWk5nRStLaFhVbnYrZnRMQng3SVZtcG52ajNKTlVDNkFLZXVTVEpwVDc0dm5YeVJXSXlaU3cxeFJveHRkTUtSWERoWWJJMWpRNi9oRzdLRzB4azlVWVY4TWlPWTZWUnVuQVVKOEtPWjVEcC82SE5SNkN6a2tLaTdjQnEvQndpOFJHOE5TZTJwdUdpNzlrTStqYU05b01BMkdRNEtjdndiUmJkWnhYZGM4VG9qdVZ1cU1CQ0dQdG1N";
-    fetch("https://routes.msg91.com/api/c/getDetails?exclude_role_ids=20", {
-      headers: {
-        "accept": "application/json, text/plain, */*",
-        "proxy_auth_token": token,
-      },
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        const user = res?.data?.[0];
-        if (user) {
-          setName(user.name ?? "");
-          setEmail(user.email ?? "");
-        }
-      })
-      .catch(() => {
-        setName(getFromCookies("user_name") ?? "");
-        setEmail(getFromCookies("user_email") ?? "");
-      })
-      .finally(() => setLoadingUser(false));
-  }, []);
-
-  function handleLogout() {
-    removeCookie("proxy_token");
-    removeCookie("local_token");
-    router.replace("/login");
-  }
-
-  return (
-    <div
-      className="absolute left-0 z-50 flex flex-col"
-      style={{ bottom: "calc(100% + 6px)", width: 240, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "0 -4px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)" }}
-    >
-      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
-        <span style={{ fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, color: "rgb(10,10,10)" }}>Account</span>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgb(148,163,184)", lineHeight: 0, padding: 2 }}>
-          <X width={14} height={14} strokeWidth={2} />
-        </button>
-      </div>
-
-      <div className="px-4 py-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
-            <User width={14} height={14} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
-          </div>
-          {loadingUser ? (
-            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-              <div style={{ height: 11, borderRadius: 4, background: "rgb(226,232,240)", width: "70%", animation: "pulse 1.4s ease-in-out infinite" }} />
-              <div style={{ height: 9, borderRadius: 4, background: "rgb(226,232,240)", width: "90%", animation: "pulse 1.4s ease-in-out infinite", animationDelay: "0.1s" }} />
-            </div>
-          ) : (
-            <div className="flex-1 min-w-0">
-              <p className="truncate" style={{ fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, color: name ? "rgb(10,10,10)" : "rgb(148,163,184)", margin: 0 }}>
-                {name || "No name set"}
-              </p>
-              {email && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Mail width={10} height={10} style={{ color: "rgb(148,163,184)", flexShrink: 0 }} />
-                  <p className="truncate" style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: 0 }}>{email}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="px-2 py-2">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2.5 px-3 py-2 w-full cursor-pointer text-left"
-          style={{ background: "transparent", border: "none", borderRadius: 4, color: "rgb(220,38,38)", fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 500 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgb(254,242,242)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-        >
-          <LogOut width={13} height={13} strokeWidth={2} />
-          Log out
-        </button>
-      </div>
-    </div>
-  );
 }
 
 function ClusterIcon({ cluster, active }: { cluster: Cluster; active: boolean }) {
@@ -159,27 +69,16 @@ export default function Sidebar({
   onSelectCluster,
   onNewCluster,
 }: SidebarProps) {
+  const router = useRouter();
   const clustersLoading = useAppSelector((s) => s.clusters.loading);
   const [wasLoading, setWasLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(clusters.length > 0);
-  const [showAccount, setShowAccount] = useState(false);
 
   useEffect(() => {
     if (clusters.length > 0) { setHasFetched(true); return; }
     if (clustersLoading) setWasLoading(true);
     if (!clustersLoading && wasLoading) setHasFetched(true);
   }, [clustersLoading, wasLoading, clusters.length]);
-  const accountRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
-        setShowAccount(false);
-      }
-    }
-    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showAccount]);
 
   return (
     <aside
@@ -273,64 +172,20 @@ export default function Sidebar({
       </div>
 
       {/* Explore Embed */}
-      <div className="px-3 pb-2">
-        <button
-          className="flex items-center gap-2 cursor-pointer w-full justify-center"
-          style={{
-            background: "rgb(255,255,255)",
-            color: "rgb(10,10,10)",
-            border: "1px solid rgb(196,201,212)",
-            boxShadow: "none",
-            fontSize: 14,
-            padding: "10px 18px",
-            height: 34,
-            fontFamily: "Geist, sans-serif",
-            fontWeight: 600,
-            letterSpacing: "-0.01em",
-            borderRadius: 4,
-            transition: "box-shadow 0.15s",
-          }}
+      <div className="px-3 pb-3">
+        <div
+          className="px-4 py-3 cursor-pointer"
+          style={{ background: "rgb(248,249,251)", border: "1px solid rgb(226,232,240)" }}
+          onClick={() => router.push("/embed")}
         >
-          Explore Embed
-          <ArrowRight width={13} height={13} strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {/* Support + Account */}
-      <div className="px-3 py-2.5 border-t flex flex-col gap-0.5" style={{ borderColor: "rgb(226,232,240)" }}>
-        <button
-          className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer text-left w-full"
-          style={{
-            background: "transparent",
-            color: "rgb(100,116,139)",
-            fontFamily: '"DM Sans", sans-serif',
-            borderRadius: 4,
-            border: 0,
-            transition: "box-shadow 0.15s, background 0.15s, border-color 0.15s",
-          }}
-        >
-          <LifeBuoy width={15} height={15} strokeWidth={2} />
-          Support
-        </button>
-        <div ref={accountRef} className="relative">
-          {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
-          <button
-            onClick={() => setShowAccount((v) => !v)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer text-left w-full"
-            style={{
-              background: showAccount ? "rgb(243,244,246)" : "transparent",
-              color: showAccount ? "rgb(10,10,10)" : "rgb(100,116,139)",
-              fontFamily: '"DM Sans", sans-serif',
-              borderRadius: 4,
-              border: 0,
-              transition: "background 0.15s, color 0.15s",
-            }}
-          >
-            <User width={15} height={15} strokeWidth={2} />
-            Account
-          </button>
+          <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, color: "rgb(10,10,10)", margin: 0 }}>Explore Embed</p>
+          <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: "2px 0 6px" }}>Built for AI startups, agents &amp; companies shipping AI products</p>
+          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 12, fontWeight: 600, color: "#5CD2A2", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            See what&apos;s inside <ArrowRight width={11} height={11} strokeWidth={2.5} />
+          </span>
         </div>
       </div>
+
     </aside>
   );
 }

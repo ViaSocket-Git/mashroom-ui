@@ -4,12 +4,11 @@ import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { X } from "lucide-react";
 import { toolApi } from "../../lib/api/toolApi";
-import { useAppDispatch } from "../../lib/hooks";
+import { useAppDispatch, useAppSelector } from "../../lib/hooks";
 import { upsertTool } from "../../lib/features/toolsSlice";
+import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 
-const EMBED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOiI1NTkzIiwicHJvamVjdF9pZCI6InByb2o5TGZRdjRUNyIsInVzZXJfaWQiOiI2MTg5MCIsImlhdCI6MTc3NDAxMDI3M30.rhl0-Hfq5k9SAH3Zali9qdNl7s-EWKvxkVsL3Xaq5Qs";
 const EMBED_PARENT_ID = "viasocketParentId";
-const USER_ID = "61890";
 
 
 interface PowerUpPanelProps {
@@ -19,7 +18,6 @@ interface PowerUpPanelProps {
 
 async function callMcpToolApi(data: Record<string, unknown>, mcpServerId: string) {
   const res = await toolApi.callTool({
-    userId: USER_ID,
     flowId: (data.id as string) ?? "",
     payload: { body: {} },
     desc: (data.description as string) || (data.title as string) || "",
@@ -35,6 +33,11 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
   const mcpServerId = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
   const dispatch = useAppDispatch();
   const scriptLoaded = useRef(false);
+  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[mcpServerId] ?? null);
+
+  useEffect(() => {
+    if (!embedToken) dispatch(fetchEmbedToken(mcpServerId));
+  }, [mcpServerId, embedToken, dispatch]);
 
   useEffect(() => {
     async function handleMessage(e: MessageEvent) {
@@ -65,7 +68,7 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
   }, [mcpServerId, dispatch]);
 
   useEffect(() => {
-    if (scriptLoaded.current) return;
+    if (!embedToken || scriptLoaded.current) return;
     const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
     if (existing) existing.parentNode?.removeChild(existing);
     const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
@@ -73,7 +76,7 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
     const script = document.createElement("script");
     script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
     script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
-    script.setAttribute("embedToken", EMBED_TOKEN);
+    script.setAttribute("embedToken", embedToken);
     script.setAttribute("parentId", EMBED_PARENT_ID);
     document.body.appendChild(script);
     scriptLoaded.current = true;
@@ -88,7 +91,7 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
       }
       scriptLoaded.current = false;
     };
-  }, []);
+  }, [embedToken]);
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>

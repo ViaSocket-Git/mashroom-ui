@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, fetchClusters } from "@/lib/features/clustersSlice";
+import { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, fetchClusters, fetchEmbedToken, updateClusterOnServer, fetchCurrentUser } from "@/lib/features/clustersSlice";
 import { fetchAiClients, type AiClient } from "@/lib/features/aiClientsSlice";
 import { fetchTools } from "@/lib/features/toolsSlice";
 import ClusterView from "@/app/components/ClusterView";
@@ -18,11 +18,23 @@ export default function ClusterPage() {
   const dispatch = useAppDispatch();
   const clustersLoaded = useAppSelector((s) => s.clusters.clusters.length > 0);
   const aiClientsLoaded = useAppSelector((s) => s.aiClients.clients.length > 0);
+  const userIdLoaded = useAppSelector((s) => s.clusters.userId !== null);
 
   useEffect(() => {
-    if (!clustersLoaded) dispatch(fetchClusters());
-    if (!aiClientsLoaded) dispatch(fetchAiClients());
-  }, [dispatch, clustersLoaded, aiClientsLoaded]);
+    if (!userIdLoaded) {
+      dispatch(fetchCurrentUser()).then(() => {
+        dispatch(fetchAiClients()).then(() => {
+          if (!clustersLoaded) dispatch(fetchClusters());
+        });
+      });
+    } else if (!aiClientsLoaded) {
+      dispatch(fetchAiClients()).then(() => {
+        if (!clustersLoaded) dispatch(fetchClusters());
+      });
+    } else if (!clustersLoaded) {
+      dispatch(fetchClusters());
+    }
+  }, [dispatch, clustersLoaded, aiClientsLoaded, userIdLoaded]);
 
 
   const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
@@ -51,11 +63,11 @@ export default function ClusterPage() {
   }, [id, activeClusterId, dispatch]);
 
   useEffect(() => {
-    console.log("Fetching tools for cluster:", cluster?.projectId);
-    if (id) {
+    if (!id) return;
+    dispatch(fetchEmbedToken(id)).then(() => {
       dispatch(fetchTools({ mcpServerId: id, projectId: "" }));
-    }
-  }, [id, cluster?.projectId, dispatch]);
+    });
+  }, [id, dispatch]);
 
   function handleNewCluster() {
     setModalMode("newCluster");
@@ -79,6 +91,7 @@ export default function ClusterPage() {
     } else if (modalMode === "changeClient" && cluster) {
       dispatch(updateClusterClient({ clusterId: cluster.id, client: client.title, clientColor }));
       dispatch(setClusterSelectedClient({ clusterId: cluster.id, client }));
+      dispatch(updateClusterOnServer({ mcpServerId: cluster.id, name: cluster.name, client: client.title }));
     } else if (modalMode === "addPowerUp" && cluster) {
       dispatch(addPowerUp({
         clusterId: cluster.id,
