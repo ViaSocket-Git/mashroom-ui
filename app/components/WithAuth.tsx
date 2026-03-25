@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
+import { getFromCookies } from "@/lib/utils/cookies";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
@@ -13,11 +13,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
     const router = useRouter();
     const pathName = usePathname();
     const searchParams = useSearchParams();
-    const [loading, setLoading] = useState(() => {
-      if (typeof document === "undefined") return false;
-      const hasToken = !!getFromCookies("proxy_token");
-      return !hasToken;
-    });
+    const [loading, setLoading] = useState(false);
 
     const proxy_auth_token = searchParams.get("proxy_auth_token");
 
@@ -25,10 +21,9 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
       const runEffect = async () => {
         const proxyToken = getFromCookies("proxy_token");
         const proxyAuthToken = proxy_auth_token;
-        const redirectionUrl = getFromCookies("previous_url") || "/";
 
         if (proxyToken && pathName === "/login") {
-          router.replace(redirectionUrl);
+          router.replace("/");
           return;
         }
         if (proxyToken) {
@@ -43,8 +38,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: proxyAuthToken }),
           });
-          removeCookie("previous_url");
-          router.replace(redirectionUrl);
+          router.replace("/");
           return;
         }
 
