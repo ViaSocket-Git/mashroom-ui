@@ -13,7 +13,11 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
     const router = useRouter();
     const pathName = usePathname();
     const searchParams = useSearchParams();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => {
+      if (typeof document === "undefined") return false;
+      const hasToken = !!getFromCookies("proxy_token");
+      return !hasToken;
+    });
 
     const proxy_auth_token = searchParams.get("proxy_auth_token");
 
