@@ -1,7 +1,7 @@
 export function setInCookies(key: string, value: string, days = 30) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
   const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
-  const secureFlag = isSecure ? "; Secure; SameSite=Lax" : "; SameSite=Lax";
+  const secureFlag = isSecure ? "; Secure; SameSite=None" : "; SameSite=Lax";
   document.cookie = `${key}=${encodeURIComponent(value)}; expires=${expires}; path=/${secureFlag}`;
 }
 

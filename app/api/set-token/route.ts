@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   response.cookies.set("proxy_token", token, {
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
-    sameSite: "lax",
+    sameSite: "none",
     secure: true,
     httpOnly: false,
   });

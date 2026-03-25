@@ -13,14 +13,12 @@ export function middleware(request: NextRequest) {
   if (!proxyToken) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    const response = NextResponse.redirect(loginUrl);
-    response.cookies.delete("previous_url");
-    return response;
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|.well-known/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|.well-known/).*)" ],
 };
