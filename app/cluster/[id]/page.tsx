@@ -18,25 +18,11 @@ export default function ClusterPage() {
   const params = useParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const clustersLoaded = useAppSelector((s) => s.clusters.clusters.length > 0);
-  const aiClientsLoaded = useAppSelector((s) => s.aiClients.clients.length > 0);
-  const userIdLoaded = useAppSelector((s) => s.clusters.userId !== null);
-
   useEffect(() => {
-    if (!userIdLoaded) {
-      dispatch(fetchCurrentUser()).then(() => {
-        dispatch(fetchAiClients()).then(() => {
-          if (!clustersLoaded) dispatch(fetchClusters());
-        });
-      });
-    } else if (!aiClientsLoaded) {
-      dispatch(fetchAiClients()).then(() => {
-        if (!clustersLoaded) dispatch(fetchClusters());
-      });
-    } else if (!clustersLoaded) {
-      dispatch(fetchClusters());
-    }
-  }, [dispatch, clustersLoaded, aiClientsLoaded, userIdLoaded]);
+    dispatch(fetchCurrentUser());
+    dispatch(fetchAiClients());
+    dispatch(fetchClusters());
+  }, [dispatch]);
 
 
   const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
