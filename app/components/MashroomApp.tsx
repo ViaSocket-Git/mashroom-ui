@@ -99,6 +99,19 @@ export default function MashroomApp() {
     setIsModalOpen(false);
   }
 
+  const isInitializing = !userIdLoaded || !aiClientsLoaded || !clustersLoaded;
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "rgb(248,249,251)" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 36, height: 36, border: "3px solid rgb(220,220,220)", borderTopColor: "rgb(10,10,10)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 13, color: "rgb(140,140,140)" }}>Loading…</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
       <Sidebar

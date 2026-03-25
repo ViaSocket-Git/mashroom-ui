@@ -14,7 +14,9 @@ export function middleware(request: NextRequest) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     const response = NextResponse.redirect(loginUrl);
-    response.cookies.set("previous_url", pathname, { path: "/" });
+    if (pathname !== "/") {
+      response.cookies.set("previous_url", pathname, { path: "/" });
+    }
     return response;
   }
 
