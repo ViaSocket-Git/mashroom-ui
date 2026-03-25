@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
@@ -21,7 +21,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
 
     const proxy_auth_token = searchParams.get("proxy_auth_token");
 
-    useLayoutEffect(() => {
+    useEffect(() => {
       const runEffect = async () => {
         const proxyToken = getFromCookies("proxy_token");
         const proxyAuthToken = proxy_auth_token;
