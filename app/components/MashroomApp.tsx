@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
+import AccountPanel from "./AccountPanel";
 import ClusterView from "./ClusterView";
 import AIClientModal from "./AIClientModal";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -19,31 +20,46 @@ import {
 import { fetchAiClients } from "@/lib/features/aiClientsSlice";
 import type { AiClient } from "@/lib/features/aiClientsSlice";
 
+function EmptyAccountButton() {
+  const [showAccount, setShowAccount] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setShowAccount(false);
+      }
+    }
+    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAccount]);
+
+  return (
+    <div ref={accountRef} className="relative">
+      {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+      <button
+        onClick={() => setShowAccount((v) => !v)}
+        className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+        style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </button>
+    </div>
+  );
+}
+
 export default function MashroomApp() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const clusters = useAppSelector((s) => s.clusters.clusters);
   const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
   const loading = useAppSelector((s) => s.clusters.loading);
-  const userIdLoaded = useAppSelector((s) => s.clusters.userId !== null);
-  const aiClientsLoaded = useAppSelector((s) => s.aiClients.clients.length > 0);
-  const clustersLoaded = useAppSelector((s) => s.clusters.clusters.length > 0);
-
   useEffect(() => {
-    if (!userIdLoaded) {
-      dispatch(fetchCurrentUser()).then(() => {
-        dispatch(fetchAiClients()).then(() => {
-          if (!clustersLoaded) dispatch(fetchClusters());
-        });
-      });
-    } else if (!aiClientsLoaded) {
-      dispatch(fetchAiClients()).then(() => {
-        if (!clustersLoaded) dispatch(fetchClusters());
-      });
-    } else if (!clustersLoaded) {
-      dispatch(fetchClusters());
-    }
-  }, [dispatch, userIdLoaded, aiClientsLoaded, clustersLoaded]);
+      dispatch(fetchCurrentUser())
+      dispatch(fetchAiClients())
+      dispatch(fetchClusters())
+
+  }, [dispatch]);
 
   useEffect(() => {
     if (activeClusterId) {
@@ -99,18 +115,6 @@ export default function MashroomApp() {
     setIsModalOpen(false);
   }
 
-  // const isInitializing = !userIdLoaded || !aiClientsLoaded || !clustersLoaded;
-
-  // if (isInitializing) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center" style={{ background: "rgb(248,249,251)" }}>
-  //       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-  //         <div style={{ width: 36, height: 36, border: "3px solid rgb(220,220,220)", borderTopColor: "rgb(10,10,10)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-  //         <span style={{ fontFamily: "Geist, sans-serif", fontSize: 13, color: "rgb(140,140,140)" }}>Loading…</span>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
@@ -124,7 +128,7 @@ export default function MashroomApp() {
         onNewCluster={handleNewCluster}
       />
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden flex flex-col">
         {loading && (
           <div className="absolute top-4 right-4 z-10 text-xs px-3 py-1.5 rounded" style={{ background: "rgb(243,244,246)", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif" }}>
             Creating cluster…
@@ -133,7 +137,16 @@ export default function MashroomApp() {
         {activeCluster ? (
           <ClusterView cluster={activeCluster} onAddPowerUp={handleAddPowerUp} onChangeClient={handleChangeClient} />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center h-full" style={{ background: "rgb(248,249,251)" }}>
+          <div className="flex flex-col h-full" style={{ background: "rgb(248,249,251)" }}>
+            {/* Header */}
+            <div className="shrink-0">
+              <div className="w-full px-6" style={{ background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
+                <div className="flex items-center justify-end h-16 w-full">
+                  <EmptyAccountButton />
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
             <div className="flex flex-col items-center gap-5" style={{ maxWidth: 420 }}>
               {/* Mushroom icon */}
               <div className="w-14 h-14 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
@@ -178,6 +191,7 @@ export default function MashroomApp() {
                   </div>
                 ))}
               </div>
+            </div>
             </div>
           </div>
         )}
