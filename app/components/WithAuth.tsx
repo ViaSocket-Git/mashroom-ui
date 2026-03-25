@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { getFromCookies } from "@/lib/utils/cookies";
+import { getFromCookies, setInCookies } from "@/lib/utils/cookies";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
@@ -33,8 +33,10 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
 
         if (proxyAuthToken) {
           setLoading(true);
+          setInCookies("proxy_token", proxyAuthToken);
           await fetch("/api/set-token", {
             method: "POST",
+            credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: proxyAuthToken }),
           });
