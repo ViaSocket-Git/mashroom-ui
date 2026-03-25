@@ -1,7 +1,7 @@
 export const runtime = "edge";
 
-import MashroomApp from "./components/MashroomApp";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <MashroomApp />;
+  redirect("/dashboard");
 }

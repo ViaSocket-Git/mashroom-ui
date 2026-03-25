@@ -23,7 +23,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
         const proxyAuthToken = proxy_auth_token;
 
         if (proxyToken && pathName === "/login") {
-          router.replace("/");
+          router.replace("/dashboard");
           return;
         }
         if (proxyToken) {
@@ -40,7 +40,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: proxyAuthToken }),
           });
-          router.replace("/");
+          router.replace("/dashboard");
           return;
         }
 
@@ -74,7 +74,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
       };
 
       runEffect();
-    }, [pathName, proxy_auth_token]);
+    }, [pathName, proxy_auth_token, router]);  
 
     return <Children {...props} loading={loading} />;
   };
