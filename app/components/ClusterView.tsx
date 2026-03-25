@@ -363,7 +363,10 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
             title: (e.data.title as string) ?? "",
             mcpServerId: cluster.id,
           });
-          if (res.data?.data) dispatch(upsertTool(res.data.data));
+          if (res.data?.data) dispatch(upsertTool({
+            ...res.data.data,
+            serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],
+          }));
         } catch (err) {
           console.error("[ClusterView] MCP tool API error:", err);
         }
@@ -414,13 +417,6 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
             {/* Tabs */}
 
             <div className="flex-1 min-w-0 flex justify-end items-center gap-1.5">
-              <button
-                className="flex items-center gap-2 cursor-pointer"
-                style={{ background: "rgb(255,255,255)", color: "rgb(10,10,10)", border: "1px solid rgb(196,201,212)", boxShadow: "none", fontSize: 13, padding: "0px 14px", height: 34, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 4 }}
-              >
-                <Share2 width={14} height={14} strokeWidth={2.5} />
-                Share
-              </button>
               <div ref={accountRef} className="relative">
                 {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
                 <button

@@ -9,6 +9,7 @@ export interface McpToolPayload {
   status: string;
   title: string;
   mcpServerId: string;
+  serviceIcons?: string[];
 }
 
 export const toolApi = {
