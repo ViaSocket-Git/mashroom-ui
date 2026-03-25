@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useLayoutEffect, useState } from "react";
-import { getFromCookies, setInCookies, removeCookie } from "@/lib/utils/cookies";
+import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
@@ -38,9 +38,13 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
 
         if (proxyAuthToken) {
           setLoading(true);
-          setInCookies("proxy_token", proxyAuthToken);
-          router.replace(redirectionUrl);
+          await fetch("/api/set-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: proxyAuthToken }),
+          });
           removeCookie("previous_url");
+          router.replace(redirectionUrl);
           return;
         }
 
