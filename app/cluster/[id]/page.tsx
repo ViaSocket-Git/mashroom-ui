@@ -19,9 +19,12 @@ export default function ClusterPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(fetchCurrentUser());
-    dispatch(fetchAiClients());
-    dispatch(fetchClusters());
+    const init = async () => {
+      dispatch(fetchCurrentUser());
+      await dispatch(fetchAiClients());
+      dispatch(fetchClusters());
+    };
+    init();
   }, [dispatch]);
 
 

@@ -12,7 +12,11 @@ export interface McpToolPayload {
   serviceIcons?: string[];
 }
 
+interface ToolApiResponse {
+  data: McpToolPayload;
+}
+
 export const toolApi = {
   callTool: (data: McpToolPayload) =>
-    axiosInstance.post(TOOL_API_URL, data),
+    axiosInstance.post<ToolApiResponse>(TOOL_API_URL, data),
 };

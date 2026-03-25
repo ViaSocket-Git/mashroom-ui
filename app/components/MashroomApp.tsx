@@ -56,9 +56,12 @@ export default function MashroomApp() {
   const loading = useAppSelector((s) => s.clusters.loading);
 
   useEffect(() => {
-    dispatch(fetchCurrentUser());
-    dispatch(fetchAiClients());
-    dispatch(fetchClusters());
+    const init = async () => {
+      dispatch(fetchCurrentUser());
+      await dispatch(fetchAiClients());
+      dispatch(fetchClusters());
+    };
+    init();
   }, [dispatch]);
 
   useEffect(() => {
