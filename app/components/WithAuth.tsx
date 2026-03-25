@@ -40,7 +40,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: proxyAuthToken }),
           });
-          router.replace("/");
+          window.location.href = "/";
           return;
         }
 
