@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import type { Tool } from "../features/toolsSlice";
 
 const TOOL_API_URL = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/tool`;
 
@@ -13,7 +14,7 @@ export interface McpToolPayload {
 }
 
 interface ToolApiResponse {
-  data: McpToolPayload;
+  data: Tool;
 }
 
 export const toolApi = {
