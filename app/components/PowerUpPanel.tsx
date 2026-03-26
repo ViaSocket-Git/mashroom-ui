@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { X } from "lucide-react";
 import { toolApi } from "../../lib/api/toolApi";
 import { useAppDispatch, useAppSelector } from "../../lib/hooks";
-import { upsertTool } from "../../lib/features/toolsSlice";
+import { upsertTool, removeTool } from "../../lib/features/toolsSlice";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 
 const EMBED_PARENT_ID = "viasocketParentId";
@@ -42,12 +42,19 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
     async function handleMessage(e: MessageEvent) {
       if (!e.data?.webhookurl) return;
       const action = e.data?.action;
-      if (
+      if (action === "deleted") {
+        const flowId = (e.data.id as string) ?? "";
+        try {
+          await toolApi.deleteTool(flowId);
+          dispatch(removeTool({ mcpServerId, toolId: flowId }));
+        } catch (err) {
+          console.error("[PowerUpPanel] delete tool error:", err);
+        }
+      } else if (
         action === "published" ||
         action === "paused" ||
         action === "created" ||
-        action === "updated" ||
-        action === "deleted"
+        action === "updated"
       ) {
         try {
           const response = await callMcpToolApi(e.data, mcpServerId);

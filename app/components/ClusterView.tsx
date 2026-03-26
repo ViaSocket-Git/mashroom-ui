@@ -7,7 +7,7 @@ import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, User } from "lucide-re
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
-import { upsertTool } from "../../lib/features/toolsSlice";
+import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
 interface PowerUp {
@@ -353,7 +353,15 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
       }
       if (!e.data?.webhookurl) return;
       const action = e.data?.action;
-      if (action === "published" || action === "paused" || action === "created" || action === "updated" || action === "deleted") {
+      if (action === "deleted") {
+        const flowId = (e.data.id as string) ?? "";
+        try {
+          await toolApi.deleteTool(flowId);
+          dispatch(removeTool({ mcpServerId: cluster.id, toolId: flowId }));
+        } catch (err) {
+          console.error("[ClusterView] delete tool error:", err);
+        }
+      } else if (action === "published" || action === "paused" || action === "created" || action === "updated") {
         try {
           const res = await toolApi.callTool({
             flowId: (e.data.id as string) ?? "",
@@ -362,7 +370,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
             status: (e.data.action as string) ?? (e.data.status as string) ?? "active",
             title: (e.data.title as string) ?? "",
             mcpServerId: cluster.id,
-          });
+                      });
           if (res.data?.data) dispatch(upsertTool({
             ...res.data.data,
             serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],

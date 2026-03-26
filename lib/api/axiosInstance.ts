@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getFromCookies } from "@/lib/utils/cookies";
+import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
 
 const axiosInstance = axios.create({
   headers: {
@@ -16,5 +16,16 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401 && typeof window !== "undefined") {
+      removeCookie("proxy_token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default axiosInstance;

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { integrationsApi } from "../api/integrationsApi";
+import { toolApi } from "../api/toolApi";
 
 export interface Tool {
   name: string;
@@ -37,18 +38,28 @@ export const fetchTools = createAsyncThunk(
     try {
       const state = getState() as { clusters: { embedTokenByClusterId: Record<string, string> } };
       const embedToken = state.clusters.embedTokenByClusterId[mcpServerId] ?? "";
-      const res = await integrationsApi.getIntegrations(embedToken);
-      const flows: IntegrationFlow[] = res.data?.data?.flows ?? [];
-      const tools: Tool[] = flows.map((flow) => ({
-        name: flow.title,
-        mcpServerId,
-        flowId: flow.id,
-        description: flow.description ?? "",
-        inputParameters: Object.keys(flow.mcpToolJson?.inputSchema?.properties ?? {}),
-        createdAt: "",
-        updatedAt: "",
-        serviceIcons: flow.serviceIcons ?? [],
-      }));
+
+      const [toolsRes, integrationsRes] = await Promise.all([
+        toolApi.getTools(mcpServerId),
+        integrationsApi.getIntegrations(embedToken),
+      ]);
+
+      const flows: IntegrationFlow[] = integrationsRes.data?.data?.flows ?? [];
+      const iconsByFlowId: Record<string, string[]> = {};
+      flows.forEach((f) => { iconsByFlowId[f.id] = f.serviceIcons ?? []; });
+
+      const tools: Tool[] = (toolsRes.data?.data ?? [])
+        .map((t) => ({
+          name: t.name,
+          mcpServerId,
+          flowId: t.flowId,
+          description: t.description ?? "",
+          inputParameters: t.inputParameters ?? [],
+          createdAt: t.createdAt ?? "",
+          updatedAt: t.updatedAt ?? "",
+          serviceIcons: iconsByFlowId[t.flowId] ?? t.serviceIcons ?? [],
+        }));
+
       return { mcpServerId, tools };
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
