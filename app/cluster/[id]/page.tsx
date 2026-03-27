@@ -33,6 +33,8 @@ export default function ClusterPage() {
   const clusters = useAppSelector((s) => s.clusters.clusters);
   const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
   const loading = useAppSelector((s) => s.clusters.loading);
+  const tools = useAppSelector((s) => s.tools.byMcpServerId[id] ?? []);
+  const hideSidebar = clusters.length === 1 && tools.length === 0;
 
   const cluster = clusters.find((c) => c.id === id) ?? null;
 
@@ -101,16 +103,18 @@ export default function ClusterPage() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
-      <Sidebar
-        clusters={clusters}
-        activeClusterId={id}
-        onSelectCluster={(clusterId) => {
-          dispatch(setActiveCluster(clusterId));
-          router.push(`/cluster/${clusterId}`);
-        }}
-        onNewCluster={handleNewCluster}
-        onChangeClient={(clusterId) => handleChangeClient(clusterId)}
-      />
+      {!hideSidebar && (
+        <Sidebar
+          clusters={clusters}
+          activeClusterId={id}
+          onSelectCluster={(clusterId) => {
+            dispatch(setActiveCluster(clusterId));
+            router.push(`/cluster/${clusterId}`);
+          }}
+          onNewCluster={handleNewCluster}
+          onChangeClient={(clusterId) => handleChangeClient(clusterId)}
+        />
+      )}
 
       <main className="flex-1 relative overflow-hidden">
         {cluster ? (
