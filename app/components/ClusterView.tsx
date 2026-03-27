@@ -447,12 +447,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   const hasTools = tools.length > 0;
 
   const [toolsWasLoading, setToolsWasLoading] = useState(false);
-  const [toolsHasFetched, setToolsHasFetched] = useState(false);
+  const [toolsHasFetched, setToolsHasFetched] = useState(tools.length > 0);
 
   useEffect(() => {
     if (toolsLoading) setToolsWasLoading(true);
     if (!toolsLoading && toolsWasLoading) setToolsHasFetched(true);
-  }, [toolsLoading, toolsWasLoading]);
+    if (tools.length > 0) setToolsHasFetched(true);
+  }, [toolsLoading, toolsWasLoading, tools.length]);
 
   useEffect(() => {
     async function handleMessage(e: MessageEvent) {
@@ -488,6 +489,39 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [cluster.id, dispatch]);
+
+  if (!toolsHasFetched) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
+        <style>{`@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }`}</style>
+        {/* Header skeleton */}
+        <div className="shrink-0 px-6 flex items-center justify-between" style={{ height: 64, background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
+          <div style={{ width: 160, height: 20, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+        </div>
+        {/* Content skeleton */}
+        <div className="flex-1 min-h-0 px-6 pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
+          {/* Power Ups panel skeleton */}
+          <div className="flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8 }}>
+            {/* Panel header */}
+            <div className="shrink-0 px-4 flex items-center" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
+              <div style={{ width: 100, height: 18, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+            </div>
+            {/* Tool cards skeleton */}
+            <div className="px-3 pt-3">
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ height: 58, borderRadius: 4, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Config panel skeleton */}
+          <div className="shrink-0" style={{ height: 57, borderRadius: 8, background: "linear-gradient(90deg,rgb(217,119,87) 25%,rgb(224,140,110) 50%,rgb(217,119,87) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
