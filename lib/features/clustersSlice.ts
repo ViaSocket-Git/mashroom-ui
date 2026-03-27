@@ -29,6 +29,7 @@ interface ClustersState {
   clusters: Cluster[];
   activeClusterId: string | null;
   loading: boolean;
+  clustersFetched: boolean;
   error: string | null;
   selectedClientByClusterId: Record<string, AiClient>;
   embedTokenByClusterId: Record<string, string>;
@@ -43,6 +44,7 @@ const initialState: ClustersState = {
   clusters: [],
   activeClusterId: null,
   loading: false,
+  clustersFetched: false,
   error: null,
   selectedClientByClusterId: {},
   embedTokenByClusterId: {},
@@ -170,6 +172,7 @@ const clustersSlice = createSlice({
       })
       .addCase(fetchClusters.fulfilled, (state, action) => {
         state.loading = false;
+        state.clustersFetched = true;
         const { clusters, aiClients } = action.payload;
         state.clusters = clusters.map((c, i) => {
           const clientTitle = c.client ?? "";
@@ -198,6 +201,7 @@ const clustersSlice = createSlice({
       })
       .addCase(fetchClusters.rejected, (state, action) => {
         state.loading = false;
+        state.clustersFetched = true;
         state.error = action.payload as string;
       })
       .addCase(createCluster.pending, (state) => {

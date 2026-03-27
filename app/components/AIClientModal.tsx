@@ -13,6 +13,7 @@ interface AIClientModalProps {
 
 export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientModalProps) {
   const [search, setSearch] = useState("");
+  const [selectedClient, setSelectedClient] = useState<AiClient | null>(null);
   const { clients, loading } = useAppSelector((s) => s.aiClients);
 
   const sorted = [...clients].sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
@@ -22,11 +23,18 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
 
   if (!isOpen) return null;
 
+  function handleDone() {
+    if (selectedClient) {
+      onSelect(selectedClient);
+      setSelectedClient(null);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setSelectedClient(null); onClose(); }} />
       <div
-        className="relative w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col z-10"
+        className="relative w-full max-w-[720px] overflow-hidden flex flex-col z-10"
         style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", boxShadow: "rgba(0,0,0,0.12) 0px 25px 50px, rgba(0,0,0,0.03) 0px 0px 0px 1px", height: "85vh", borderRadius: 4 }}
       >
         {/* Header */}
@@ -67,14 +75,20 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5">
-              {filtered.map((client) => (
+              {filtered.map((client) => {
+                const isSelected = selectedClient?.id === client.id;
+                return (
                 <button
                   key={client.id}
-                  onClick={() => onSelect(client)}
-                  className="flex items-center gap-4 px-5 text-left border-0 cursor-pointer transition-all w-full"
-                  style={{ background: "rgba(0,0,0,0)", border: "1px solid rgb(238,239,242)", borderRadius: 4, boxShadow: "none", minHeight: 60, paddingTop: 14, paddingBottom: 14 }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(196,201,212)"; (e.currentTarget as HTMLButtonElement).style.background = "rgb(248,250,252)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(238,239,242)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0)"; }}
+                  onClick={() => setSelectedClient(isSelected ? null : client)}
+                  className="flex items-center gap-4 px-5 text-left cursor-pointer transition-all w-full"
+                  style={{
+                    background: isSelected ? "rgb(255,245,242)" : "rgba(0,0,0,0)",
+                    border: isSelected ? "1.5px solid rgb(220,160,140)" : "1px solid rgb(238,239,242)",
+                    borderRadius: 4, boxShadow: "none", minHeight: 60, paddingTop: 14, paddingBottom: 14
+                  }}
+                  onMouseEnter={(e) => { if (!isSelected) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(196,201,212)"; (e.currentTarget as HTMLButtonElement).style.background = "rgb(248,250,252)"; }}}
+                  onMouseLeave={(e) => { if (!isSelected) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(238,239,242)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0)"; }}}
                 >
                   <div style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <img
@@ -93,9 +107,32 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                     )}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 flex items-center justify-between px-7 py-4" style={{ borderTop: "1px solid rgb(226,232,240)" }}>
+          <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: "rgb(148,163,184)" }}>
+            {selectedClient ? `${selectedClient.title} selected` : "Select an AI client to continue"}
+          </span>
+          <button
+            onClick={handleDone}
+            disabled={!selectedClient}
+            className="flex items-center gap-2 cursor-pointer"
+            style={{
+              background: selectedClient ? "rgb(10,10,10)" : "rgb(243,244,246)",
+              color: selectedClient ? "#fff" : "rgb(148,163,184)",
+              border: "none", borderRadius: 6, padding: "10px 20px",
+              fontFamily: "Geist, sans-serif", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em",
+              cursor: selectedClient ? "pointer" : "not-allowed", transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            Done
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+          </button>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, ArrowRight, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/lib/hooks";
 
@@ -24,6 +24,7 @@ interface SidebarProps {
   activeClusterId: string | null;
   onSelectCluster: (id: string) => void;
   onNewCluster: () => void;
+  onChangeClient: (clusterId: string) => void;
 }
 
 function ClusterIcon({ cluster, active }: { cluster: Cluster; active: boolean }) {
@@ -68,11 +69,24 @@ export default function Sidebar({
   activeClusterId,
   onSelectCluster,
   onNewCluster,
+  onChangeClient,
 }: SidebarProps) {
   const router = useRouter();
   const clustersLoading = useAppSelector((s) => s.clusters.loading);
   const [wasLoading, setWasLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(clusters.length > 0);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    if (openMenuId) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openMenuId]);
 
   useEffect(() => {
     if (clusters.length > 0) { setHasFetched(true); return; }
@@ -159,8 +173,9 @@ export default function Sidebar({
           )}
           {clusters.map((cluster) => {
             const isActive = activeClusterId === cluster.id;
+            const isMenuOpen = openMenuId === cluster.id;
             return (
-              <div key={cluster.id} className="relative">
+              <div key={cluster.id} className="relative group/cluster">
                 <button
                   onClick={() => onSelectCluster(cluster.id)}
                   className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
@@ -174,11 +189,44 @@ export default function Sidebar({
                     fontWeight: isActive ? 600 : 400,
                     transition: "0.15s",
                     cursor: "pointer",
+                    paddingRight: 28,
                   }}
                 >
                   <ClusterIcon cluster={cluster} active={isActive} />
                   <span className="flex-1 truncate">{cluster.name}</span>
                 </button>
+
+                {/* Ellipsis button — visible on hover or when menu open */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : cluster.id); }}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer opacity-0 group-hover/cluster:opacity-100 transition-opacity"
+                  style={{
+                    width: 22, height: 22, borderRadius: 4, border: "none",
+                    background: isMenuOpen ? "rgb(226,232,240)" : "transparent",
+                    color: "rgb(100,116,139)",
+                    opacity: isMenuOpen ? 1 : undefined,
+                  }}
+                >
+                  <MoreVertical width={13} height={13} strokeWidth={2} />
+                </button>
+
+                {/* Dropdown menu */}
+                {isMenuOpen && (
+                  <div
+                    ref={menuRef}
+                    className="absolute right-0 z-50"
+                    style={{ top: "calc(100% + 4px)", minWidth: 150, background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.1) 0px 4px 16px", overflow: "hidden" }}
+                  >
+                    <button
+                      onClick={() => { setOpenMenuId(null); onChangeClient(cluster.id); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 cursor-pointer text-left"
+                      style={{ background: "transparent", border: "none", fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: "rgb(10,10,10)", fontWeight: 500 }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                      Change AI Client
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

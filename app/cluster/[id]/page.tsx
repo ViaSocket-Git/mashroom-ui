@@ -70,7 +70,10 @@ export default function ClusterPage() {
     setIsModalOpen(true);
   }
 
-  function handleChangeClient() {
+  const [targetClusterId, setTargetClusterId] = useState<string | null>(null);
+
+  function handleChangeClient(clusterId?: string) {
+    setTargetClusterId(clusterId ?? cluster?.id ?? null);
     setModalMode("changeClient");
     setIsModalOpen(true);
   }
@@ -82,10 +85,11 @@ export default function ClusterPage() {
         const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
         if (newId) router.push(`/cluster/${newId}`);
       });
-    } else if (modalMode === "changeClient" && cluster) {
-      dispatch(updateClusterClient({ clusterId: cluster.id, client: client.title, clientColor }));
-      dispatch(setClusterSelectedClient({ clusterId: cluster.id, client }));
-      dispatch(updateClusterOnServer({ mcpServerId: cluster.id, name: cluster.name, client: client.title }));
+    } else if (modalMode === "changeClient" && targetClusterId) {
+      const target = clusters.find((c) => c.id === targetClusterId);
+      dispatch(updateClusterClient({ clusterId: targetClusterId, client: client.title, clientColor }));
+      dispatch(setClusterSelectedClient({ clusterId: targetClusterId, client }));
+      dispatch(updateClusterOnServer({ mcpServerId: targetClusterId, name: target?.name ?? "", client: client.title }));
     } else if (modalMode === "addPowerUp" && cluster) {
       dispatch(addPowerUp({
         clusterId: cluster.id,
@@ -105,6 +109,7 @@ export default function ClusterPage() {
           router.push(`/cluster/${clusterId}`);
         }}
         onNewCluster={handleNewCluster}
+        onChangeClient={(clusterId) => handleChangeClient(clusterId)}
       />
 
       <main className="flex-1 relative overflow-hidden">

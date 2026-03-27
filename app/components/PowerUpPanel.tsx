@@ -8,8 +8,6 @@ import { useAppDispatch, useAppSelector } from "../../lib/hooks";
 import { upsertTool, removeTool } from "../../lib/features/toolsSlice";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 
-const EMBED_PARENT_ID = "viasocketParentId";
-
 
 interface PowerUpPanelProps {
   onClose: () => void;
@@ -91,9 +89,6 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
       </div>
 
       {/* Embed content */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        <div id={EMBED_PARENT_ID} className="flex-1 min-h-0 w-full" />
-      </div>
     </div>
   );
 }

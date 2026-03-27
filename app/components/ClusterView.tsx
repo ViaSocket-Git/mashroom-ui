@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Share2, Plus, Zap, X, Copy, Check, ChevronRight, User } from "lucide-react";
+import { Plus, Zap, X, Copy, Check, ChevronRight, User } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
+import EmbedModal from "./EmbedModal";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
@@ -39,7 +39,7 @@ interface ClusterViewProps {
   onChangeClient: () => void;
 }
 
-function ToolCards({ clusterId, onOpenPanel }: { clusterId: string; onOpenPanel: () => void }) {
+function ToolCards({ clusterId, onOpenPanel, onToolClick }: { clusterId: string; onOpenPanel: () => void; onToolClick: (flowId: string) => void }) {
   const dispatch = useAppDispatch();
   const tools = useAppSelector((s) => s.tools.byMcpServerId[clusterId] ?? []);
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[clusterId] ?? null);
@@ -51,10 +51,7 @@ function ToolCards({ clusterId, onOpenPanel }: { clusterId: string; onOpenPanel:
   if (tools.length === 0) return null;
 
   function handleToolClick(tool: { flowId: string }) {
-    if ((window as any).openViasocket && embedToken) {
-      (window as any).openViasocket(tool.flowId, { embedToken });
-    }
-    onOpenPanel();
+    onToolClick(tool.flowId);
   }
 
   return (
@@ -124,7 +121,7 @@ function ClientIcon({ clientId, color }: { clientId: string; color: string }) {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   function handleCopy() {
     navigator.clipboard.writeText(text);
@@ -138,7 +135,7 @@ function CopyButton({ text }: { text: string }) {
       style={{ background: "rgb(243,244,246)", border: "1px solid rgb(226,232,240)", borderRadius: 4, padding: "4px 10px", fontSize: 12, fontFamily: "Geist, sans-serif", fontWeight: 500, color: "rgb(60,60,60)" }}
     >
       {copied ? <Check width={13} height={13} /> : <Copy width={13} height={13} />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? "Copied" : label}
     </button>
   );
 }
@@ -310,14 +307,124 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
   );
 }
 
+function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: Cluster; onChangeClient: () => void; hasTools: boolean }) {
+  const [expanded, setExpanded] = useState(hasTools);
+  const selectedClient = useAppSelector((s) => s.clusters.selectedClientByClusterId[cluster.id]);
+  const mcpUrl = cluster.url;
+  const configJsonByType = {
+    url: { mcpServers: { mushroom: { url: mcpUrl, transport: "sse" } } },
+    npx: { mcpServers: { viasocket: { command: "npx", args: ["-y", "mcp-remote", mcpUrl] } } },
+    serverUrl: { mcpServers: { "viasocket Actions MCP": { serverUrl: mcpUrl } } },
+  } as const;
+  const configType = (selectedClient?.configType as keyof typeof configJsonByType) ?? "url";
+  const configJson = JSON.stringify(configJsonByType[configType] ?? configJsonByType.url, null, 2);
+
+  const steps = [
+    { num: 1, title: "Add your power-ups", desc: "Pick apps and the specific actions your AI can perform." },
+    { num: 2, title: "Copy the config below", desc: "Paste it into your AI client's settings file." },
+    { num: 3, title: "Ask your AI to act", desc: "Then just ask in plain language.", quote: "\"Send a Slack message to the team about tomorrow's standup\"" },
+  ];
+
+  return (
+    <>
+      {/* Salmon header — clickable to toggle */}
+      <div
+        onClick={() => setExpanded(v => !v)}
+        className="shrink-0 flex items-center px-5 w-full cursor-pointer"
+        style={{ height: 57, background: "rgb(217,119,87)", borderBottom: expanded ? "1px solid rgba(0,0,0,0.12)" : "none" }}
+      >
+        <span style={{ fontFamily: "Geist, sans-serif", fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", flex: 1 }}>
+          {selectedClient?.title ?? cluster.client} Configuration
+        </span>
+
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ flexShrink: 0, transition: "transform 0.2s", transform: expanded ? "rotate(0deg)" : "rotate(180deg)" }}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </div>
+
+      {/* Body — two columns */}
+      {expanded && <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Left 60%: URL + JSON */}
+        <div className="flex flex-col overflow-y-auto" style={{ flex: "0 0 60%", borderRight: "1px solid rgb(226,232,240)", padding: "14px 16px 16px" }}>
+          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 6 }}>MCP Endpoint URL</span>
+          <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid rgb(226,232,240)" }}>
+            <input
+              readOnly
+              value={mcpUrl}
+              style={{ flex: 1, minWidth: 0, fontFamily: '"Geist Mono", monospace', fontSize: 11, color: "rgb(10,10,10)", background: "rgb(248,250,252)", border: "none", padding: "7px 12px", outline: "none" }}
+            />
+            <CopyButton text={mcpUrl} label="Copy" />
+          </div>
+          <div className="flex items-start gap-1" style={{ marginTop: 6, marginBottom: 12 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgb(217,119,6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(146,64,14)", lineHeight: 1.45 }}>Keep this URL private — it authorizes AI actions on your connected accounts.</span>
+          </div>
+          <div style={{ height: 1, background: "rgb(226,232,240)", marginBottom: 12 }} />
+          {/* Dark JSON block */}
+          <div style={{ background: "rgb(13,17,23)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
+            <div className="flex items-center justify-between" style={{ padding: "7px 14px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, color: "rgb(107,114,128)", letterSpacing: "0.04em" }}>JSON</span>
+              <CopyButton text={configJson} label="Copy" />
+            </div>
+            <pre style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, margin: 0, padding: "10px 14px", lineHeight: 1.65, overflowX: "auto", color: "rgb(229,231,235)" }} dangerouslySetInnerHTML={{ __html: configJson
+              .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+              .replace(/("[^"]+")(:)/g, '<span style="color:rgb(96,165,250)">$1</span>$2')
+              .replace(/: ("[^"]+")/g, ': <span style="color:rgb(52,211,153)">$1</span>')
+            }} />
+          </div>
+        </div>
+
+        {/* Right 40%: How to connect */}
+        <div className="flex flex-col overflow-y-auto" style={{ flex: "0 0 40%", padding: "14px 20px 16px" }}>
+          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, display: "block" }}>How to connect</span>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+            {/* Vertical connector line */}
+            <div style={{ position: "absolute", left: 10, top: 22, bottom: 52, width: 1.5, background: "rgb(226,232,240)", borderRadius: 2 }} />
+            {steps.map((step, i) => (
+              <div key={step.num} className="flex gap-3 items-start" style={{ position: "relative" }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgb(10,10,10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 1 }}>
+                  <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, fontWeight: 700, color: "#fff" }}>{step.num}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600, color: "rgb(10,10,10)", margin: "0 0 3px", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{step.title}</p>
+                  <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", margin: 0, lineHeight: 1.5 }}>{step.desc}</p>
+                  {step.quote && (
+                    <div style={{ borderLeft: "2px solid rgb(226,232,240)", paddingLeft: 9, marginTop: 8 }}>
+                      <em style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", lineHeight: 1.5 }}>{step.quote}</em>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+              <button
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 500, color: "rgb(37,99,235)", letterSpacing: "-0.01em" }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                Watch a walkthrough
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>}
+    </>
+  );
+}
+
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: ClusterViewProps) {
-  const router = useRouter();
   const dispatch = useAppDispatch();
 
   const [showPanel, setShowPanel] = useState(false);
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [headerHovered, setHeaderHovered] = useState(false);
+  const [pendingFlowId, setPendingFlowId] = useState<string | null>(null);
   const [showAccount, setShowAccount] = useState(false);
+
+  function handleToolClick(flowId: string) {
+    setPendingFlowId(flowId);
+    setShowPanel(true);
+  }
   const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -342,15 +449,8 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
     if (!toolsLoading && toolsWasLoading) setToolsHasFetched(true);
   }, [toolsLoading, toolsWasLoading]);
 
-  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
-  const embedScriptLoaded = useRef(false);
-  const [embedReady, setEmbedReady] = useState(false);
-
   useEffect(() => {
     async function handleMessage(e: MessageEvent) {
-      if (e.data?.type === "send_embed_data") {
-        setEmbedReady(true);
-      }
       if (!e.data?.webhookurl) return;
       const action = e.data?.action;
       if (action === "deleted") {
@@ -384,213 +484,122 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
     return () => window.removeEventListener("message", handleMessage);
   }, [cluster.id, dispatch]);
 
-  useEffect(() => {
-    if (!embedToken || embedScriptLoaded.current) return;
-    const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-    if (existing) existing.parentNode?.removeChild(existing);
-    const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
-    if (existingContainer) existingContainer.parentNode?.removeChild(existingContainer);
-    const script = document.createElement("script");
-    script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
-    script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
-    script.setAttribute("embedToken", embedToken);
-    script.setAttribute("parentId", "viasocketParentId");
-    document.body.appendChild(script);
-    embedScriptLoaded.current = true;
-    return () => {
-      try {
-        const s = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-        if (s?.parentNode === document.body) document.body.removeChild(s);
-        const container = document.getElementById("iframe-viasocket-embed-parent-container");
-        if (container) container.parentNode?.removeChild(container);
-      } catch (e) {
-        console.warn("Error removing embed script:", e);
-      }
-      embedScriptLoaded.current = false;
-    };
-  }, [embedToken]);
-
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
       {/* Header */}
       <div className="shrink-0">
-        <div className="w-full px-6" style={{ background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
+        <div className="w-full px-6" style={{ background: "transparent" }}>
           <div className="flex items-center justify-between h-16 w-full">
-            <div className="flex-1 min-w-0 flex items-center self-stretch">
-              <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>
+            <div className="flex items-center gap-2.5">
+              {cluster.selectedClient?.icon ? (
+                <div style={{ width: 24, height: 24, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
+                  <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              ) : (
+                <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
+              )}
+              <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>
                 {cluster.name}
               </h2>
             </div>
+            <div ref={accountRef} className="relative">
+              {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+              <button
+                onClick={() => setShowAccount((v) => !v)}
+                className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+              >
+                <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Tabs */}
+      {/* Content — stacked full width */}
+      <div className="flex-1 min-h-0 px-6 pt-4 flex flex-col gap-2 h-full overflow-hidden">
 
-            <div className="flex-1 min-w-0 flex justify-end items-center gap-1.5">
-              <div ref={accountRef} className="relative">
-                {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+        {/* Power Ups */}
+        <div className="w-full flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+          {/* Header */}
+          <div className="shrink-0 flex items-center px-4" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
+            <span style={{ fontFamily: "Geist, sans-serif", fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Power Ups</span>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col" style={{ minHeight: 0 }}>
+            {/* Has tools */}
+            {toolsHasFetched && tools.length > 0 && (
+              <div className="px-3 pt-3 pb-3">
+                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+                  <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} onToolClick={handleToolClick} />
+                  <button
+                    onClick={() => setShowPanel(true)}
+                    className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
+                    style={{ background: "rgb(250,251,252)", border: "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s", borderRadius: 4 }}
+                  >
+                    <div className="flex items-center gap-2.5 px-3 py-3">
+                      <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
+                        <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Loading skeletons */}
+            {!toolsHasFetched && (
+              <div className="px-3 pt-3 pb-3">
+                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {toolsHasFetched && tools.length === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+                <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 22, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.01em", textAlign: "center" }}>No power-ups yet</p>
                 <button
-                  onClick={() => setShowAccount((v) => !v)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                  onClick={() => setShowPanel(true)}
+                  className="flex flex-col items-center cursor-pointer"
+                  style={{ border: "1.5px solid rgb(46,168,126)", borderRadius: 12, background: "rgba(46,168,126,0.04)", padding: "14px 24px", gap: 10, width: "100%", maxWidth: 300 }}
                 >
-                  <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+                  <span style={{ color: "rgb(46,168,126)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: "-0.01em" }}>Add apps from 2500+ apps</span>
+                  <div className="flex items-center gap-1.5">
+                    {/* Gmail */}
+                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 6.5V18a1.5 1.5 0 001.5 1.5H5V8.8l7 5.25 7-5.25V19.5h1.5A1.5 1.5 0 0022 18V6.5a2 2 0 00-3.18-1.61L12 10.2 5.18 4.89A2 2 0 002 6.5z" fill="#EA4335"/></svg>
+                    </div>
+                    {/* Notion */}
+                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326l-2.197-1.586c-.42-.326-.98-.7-2.054-.606L3.01 2.882c-.467.047-.56.28-.374.466l1.823 1.86z" fill="#000"/><path d="M5.252 7.012v12.57c0 .653.326.933.98.886l14.57-.84c.654-.046.746-.466.746-1.026V6.172c0-.56-.233-.84-.7-.793l-15.223.886c-.514.047-.373.234-.373.747z" fill="#fff" stroke="#000" strokeWidth="0.5"/><path d="M14.86 8.384c.094.42 0 .84-.42.886l-.654.14v9.278c-.56.28-1.12.42-1.493.42-.7 0-.886-.233-1.4-.886l-4.29-6.74v6.507l1.353.28s0 .84-1.12.84l-3.12.186c-.093-.186 0-.653.327-.746l.84-.234V9.69l-1.166-.093c-.094-.42.14-1.026.793-1.073l3.353-.233 4.478 6.834V9.037l-1.12-.14c-.094-.513.28-.886.746-.933l3.493-.233z" fill="#000"/></svg>
+                    </div>
+                    {/* Slack */}
+                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.166a2.125 2.125 0 1 1-2.125-2.125h2.125v2.125zm1.063 0a2.125 2.125 0 1 1 4.25 0v5.292a2.125 2.125 0 1 1-4.25 0v-5.292z" fill="#E01E5A"/><path d="M8.855 5.042a2.125 2.125 0 1 1 2.125-2.125v2.125H8.855zm0 1.063a2.125 2.125 0 1 1 0 4.25H3.542a2.125 2.125 0 1 1 0-4.25h5.313z" fill="#36C5F0"/><path d="M18.958 8.855a2.125 2.125 0 1 1 2.125 2.125h-2.125V8.855zm-1.063 0a2.125 2.125 0 1 1-4.25 0V3.542a2.125 2.125 0 1 1 4.25 0v5.313z" fill="#2EB67D"/><path d="M15.145 18.958a2.125 2.125 0 1 1-2.125 2.125v-2.125h2.125zm0-1.063a2.125 2.125 0 1 1 0-4.25h5.313a2.125 2.125 0 1 1 0 4.25h-5.313z" fill="#ECB22E"/></svg>
+                    </div>
+                    <Plus width={18} height={18} strokeWidth={3} style={{ color: "rgb(46,168,126)" }} />
+                  </div>
                 </button>
               </div>
-            </div>
+            )}
           </div>
+        </div>
+
+        {/* Configuration panel */}
+        <div className="w-full shrink-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, overflow: "hidden" }}>
+          <InlineConfigSection cluster={cluster} onChangeClient={onChangeClient} hasTools={hasTools} />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-h-0 px-24 pt-4 pb-3 flex justify-center overflow-hidden">
-        <div className="w-full flex flex-col h-full">
-
-          {/* Client card */}
-            <div
-              className="overflow-visible relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderBottom: "none", boxShadow: "none", borderRadius: "6px 6px 0 0" }}
-              onMouseEnter={() => setHeaderHovered(true)}
-              onMouseLeave={() => setHeaderHovered(false)}
-            >
-              <div className="flex items-center justify-between p-4 px-5">
-                <div className="flex items-center gap-2 ml-1">
-                  {cluster.selectedClient?.icon ? (
-                    <div style={{ width: 24, height: 24, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
-                      <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
-                  ) : (
-                    <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
-                  )}
-                  <span style={{ color: "rgb(10,10,10)", fontSize: 15, fontFamily: "Geist, sans-serif" }}>{cluster.selectedClient?.title ?? cluster.client}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {/* Change AI Client — visible on hover */}
-                  <button
-                    onClick={onChangeClient}
-                    className="flex items-center gap-2 cursor-pointer"
-                    style={{
-                      background: "rgb(255,255,255)", color: "rgb(10,10,10)", border: "1px solid rgb(196,201,212)",
-                      fontSize: 12, padding: "6px 14px", height: 34, fontFamily: "Geist, sans-serif", fontWeight: 600,
-                      letterSpacing: "-0.01em", borderRadius: 4, transition: "opacity 0.15s",
-                      opacity: headerHovered ? 1 : 0, pointerEvents: headerHovered ? "auto" : "none",
-                    }}
-                  >
-                    Change AI Client
-                  </button>
-
-                  {/* Connect button — only when tools exist */}
-                  {hasTools && (
-                    <div className="relative group">
-                      <button
-                        onClick={() => setShowConfigModal(true)}
-                        className="flex items-center gap-2 cursor-pointer"
-                        style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", fontSize: 13, padding: "0px 16px", height: 34, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 4 }}
-                      >
-                        Connect
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-                      </button>
-
-                      {/* Tooltip — shown on hover */}
-                      <div
-                        className="absolute z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                        style={{ top: "calc(100% + 8px)", right: 0, background: "rgb(10,10,10)", color: "#fff", borderRadius: 8, padding: "10px 14px", width: 220, boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}
-                      >
-                        <p style={{ margin: 0, fontSize: 13, fontFamily: "Geist, sans-serif", lineHeight: 1.45 }}>
-                          Your power-ups are ready. Connect your client to activate them.
-                        </p>
-                        {/* Arrow */}
-                        <div style={{ position: "absolute", top: -6, right: 16, width: 12, height: 12, background: "rgb(10,10,10)", transform: "rotate(45deg)", borderRadius: 2 }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          {/* Power-ups area */}
-          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            <div
-              className="flex-1 min-h-0 overflow-hidden flex flex-col relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderTop: "1px solid rgb(226,232,240)", borderRadius: "0 0 6px 6px", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
-            >
-              {!showPanel && (
-                <div className="shrink-0 px-3 pt-3 pb-3">
-                  <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                    <button
-                      onClick={() => setShowPanel(true)}
-                      className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
-                      style={{ background: "rgb(250,251,252)", border: "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s", borderRadius: 4 }}
-                    >
-                      <div className="flex items-center gap-2.5 px-3 py-3">
-                        <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
-                          <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
-                        </div>
-                      </div>
-                    </button>
-                    {!toolsHasFetched
-                      ? [1, 2, 3].map((i) => (
-                          <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
-                        ))
-                      : <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} />}
-                  </div>
-                </div>
-              )}
-
-              {/* #viasocketParentId always in DOM so embed script finds it on load */}
-              <div
-                className="absolute inset-0 z-20"
-                style={{
-                  visibility: showPanel ? "visible" : "hidden",
-                  pointerEvents: showPanel ? "auto" : "none",
-                  flexDirection: "column",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  display: "flex",
-                }}
-              >
-                {/* Panel header — shown only after embed iframe is ready */}
-                {embedReady && (
-                  <div
-                    className="shrink-0 flex items-center justify-between px-4"
-                    style={{ height: 44, borderBottom: "1px solid rgb(226,232,240)", background: "rgb(250,251,252)", borderRadius: "6px 6px 0 0" }}
-                  >
-                    <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "-0.01em" }}></span>
-                    <button
-                      onClick={() => setShowPanel(false)}
-                      className="flex items-center justify-center cursor-pointer"
-                      style={{ background: "transparent", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 6, borderRadius: 4 }}
-                    >
-                      <X width={18} height={18} strokeWidth={2.5} />
-                    </button>
-                  </div>
-                )}
-                {/* Embed mounts here */}
-                <div id="viasocketParentId" className="flex-1 min-h-0 w-full" />
-              </div>
-
-              {!showPanel && toolsHasFetched && tools.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center text-center px-10">
-                  <div className="w-14 h-14 flex items-center justify-center mb-5" style={{ borderRadius: 14, background: "rgb(243,244,246)", border: "1.5px solid rgb(229,231,235)" }}>
-                    <Zap width={22} height={22} strokeWidth={2} style={{ color: "rgb(148,163,184)" }} />
-                  </div>
-                  <p style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 17, margin: 0, letterSpacing: "-0.01em" }}>No power-ups yet</p>
-                  <p style={{ color: "rgb(120,132,154)", fontFamily: '"DM Sans", sans-serif', fontSize: 14, margin: "8px 0 0", lineHeight: 1.55, maxWidth: 320 }}>
-                    Add your first power-up to give{" "}
-                    <strong style={{ color: "rgb(10,10,10)", fontWeight: 600 }}>{cluster.client}</strong>{" "}
-                    real-world actions across 2,000+ apps.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {showConfigModal && (
-        <ClusterConfigModal cluster={cluster} onClose={() => setShowConfigModal(false)} />
-      )}
+      <EmbedModal open={showPanel} onClose={() => { setShowPanel(false); setPendingFlowId(null); }} clusterId={cluster.id} pendingFlowId={pendingFlowId} />
     </div>
   );
 }

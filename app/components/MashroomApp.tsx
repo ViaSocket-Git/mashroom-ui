@@ -54,6 +54,7 @@ export default function MashroomApp() {
   const clusters = useAppSelector((s) => s.clusters.clusters);
   const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
   const loading = useAppSelector((s) => s.clusters.loading);
+  const clustersFetched = useAppSelector((s) => s.clusters.clustersFetched);
 
   useEffect(() => {
     const init = async () => {
@@ -85,7 +86,10 @@ export default function MashroomApp() {
     setIsModalOpen(true);
   }
 
-  function handleChangeClient() {
+  const [targetClusterId, setTargetClusterId] = useState<string | null>(null);
+
+  function handleChangeClient(clusterId?: string) {
+    setTargetClusterId(clusterId ?? activeCluster?.id ?? null);
     setModalMode("changeClient");
     setIsModalOpen(true);
   }
@@ -97,14 +101,11 @@ export default function MashroomApp() {
         const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
         if (newId) router.push(`/cluster/${newId}`);
       });
-    } else if (modalMode === "changeClient" && activeCluster) {
-      dispatch(updateClusterClient({
-        clusterId: activeCluster.id,
-        client: client.title,
-        clientColor,
-      }));
-      dispatch(setClusterSelectedClient({ clusterId: activeCluster.id, client }));
-      dispatch(updateClusterOnServer({ mcpServerId: activeCluster.id, name: activeCluster.name, client: client.title }));
+    } else if (modalMode === "changeClient" && targetClusterId) {
+      const target = clusters.find((c) => c.id === targetClusterId);
+      dispatch(updateClusterClient({ clusterId: targetClusterId, client: client.title, clientColor }));
+      dispatch(setClusterSelectedClient({ clusterId: targetClusterId, client }));
+      dispatch(updateClusterOnServer({ mcpServerId: targetClusterId, name: target?.name ?? "", client: client.title }));
     } else if (modalMode === "addPowerUp" && activeCluster) {
       dispatch(addPowerUp({
         clusterId: activeCluster.id,
@@ -121,15 +122,18 @@ export default function MashroomApp() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
-      <Sidebar
-        clusters={clusters}
-        activeClusterId={activeClusterId ?? ""}
-        onSelectCluster={(id) => {
-          dispatch(setActiveCluster(id));
-          router.push(`/cluster/${id}`);
-        }}
-        onNewCluster={handleNewCluster}
-      />
+      {clusters.length > 0 && (
+        <Sidebar
+          clusters={clusters}
+          activeClusterId={activeClusterId ?? ""}
+          onSelectCluster={(id) => {
+            dispatch(setActiveCluster(id));
+            router.push(`/cluster/${id}`);
+          }}
+          onNewCluster={handleNewCluster}
+          onChangeClient={(clusterId) => handleChangeClient(clusterId)}
+        />
+      )}
 
       <main className="flex-1 relative overflow-hidden flex flex-col">
         {loading && (
@@ -143,14 +147,33 @@ export default function MashroomApp() {
           <div className="flex flex-col h-full" style={{ background: "rgb(248,249,251)" }}>
             {/* Header */}
             <div className="shrink-0">
-              <div className="w-full px-6" style={{ background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
-                <div className="flex items-center justify-end h-16 w-full">
+              <div className="w-full px-6" style={{ background: "transparent" }}>
+                <div className="flex items-center justify-between h-16 w-full">
+                  <a className="flex items-center gap-2.5 no-underline" href="/">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
+                        <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#1a1a1a" />
+                        <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#0a0a0a" />
+                        <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="#1a1a1a" opacity="0.3" />
+                        <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
+                        <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
+                        <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
+                        <line x1="18" y1="26" x2="32" y2="16" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                        <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
+                      <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
+                    </div>
+                  </a>
                   <EmptyAccountButton />
                 </div>
               </div>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="flex flex-col items-center gap-5" style={{ maxWidth: 420 }}>
+            <div className="flex flex-col items-center gap-5">
               {/* Mushroom icon */}
               <div className="w-14 h-14 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
                 <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
@@ -172,21 +195,20 @@ export default function MashroomApp() {
                 style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", fontSize: 14, padding: "0 22px", height: 40, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 6 }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                Create your first cluster
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                Plant your first power-up
               </button>
 
               {/* Steps */}
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-6 mt-2">
                 {[
                   { step: "STEP 1", label: "Pick your power-ups" },
                   { step: "STEP 2", label: "Your AI absorbs them" },
                   { step: "STEP 3", label: "Actions on autopilot" },
                 ].map(({ step, label }, i) => (
                   <div key={step} className="flex items-center gap-3">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span style={{ fontFamily: "Geist, sans-serif", fontSize: 9, fontWeight: 600, color: "rgb(148,163,184)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{step}</span>
-                      <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", whiteSpace: "nowrap" }}>{label}</span>
+                    <div className="flex flex-col items-center text-center" style={{ minWidth: 160 }}>
+                      <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 12, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{step}</span>
+                      <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{label}</span>
                     </div>
                     {i < 2 && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(196,201,212)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
