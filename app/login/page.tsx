@@ -12,9 +12,9 @@ const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 function MushroomSVG({ size = 40, opacity = 0.1 }: { size?: number; opacity?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" style={{ opacity }}>
-      <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-      <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(30,30,30)" />
-      <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
+      <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="currentColor" />
+      <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="currentColor" opacity="0.7" />
+      <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="currentColor" />
       <circle cx="18" cy="26" r="2.5" fill="white" opacity={0.6} />
       <circle cx="32" cy="16" r="2.5" fill="white" opacity={0.6} />
       <circle cx="46" cy="26" r="2.5" fill="white" opacity={0.6} />
@@ -81,11 +81,11 @@ function LoginPageInner({ loading }: { loading: boolean }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "rgb(250,250,250)" }}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <FloatingMushrooms />
         <div style={{ zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 36, height: 36, border: "3px solid rgb(220,220,220)", borderTopColor: "rgb(10,10,10)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 13, color: "rgb(140,140,140)" }}>Loading…</span>
+          <div style={{ width: 36, height: 36, border: "3px solid hsl(var(--border))", borderTopColor: "hsl(var(--foreground))", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+          <span className="text-muted-foreground text-[13px]" style={{ fontFamily: "Geist, sans-serif" }}>Loading…</span>
         </div>
       </div>
     );
@@ -93,31 +93,31 @@ function LoginPageInner({ loading }: { loading: boolean }) {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: "rgb(250,250,250)" }}
+      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-background"
     >
       <FloatingMushrooms />
 
       {/* Glow blobs */}
-      <div style={{ position: "fixed", top: "-10%", left: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
+      <div style={{ position: "fixed", top: "-10%", left: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, var(--shadow) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
+      <div style={{ position: "fixed", bottom: "-10%", right: "-5%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, var(--shadow-light) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
       <div style={{ position: "fixed", bottom: "-10%", right: "-5%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
 
       {/* Top bar */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-            <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-            <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(40,40,40)" />
-            <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
+            <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="currentColor" />
+            <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="currentColor" opacity="0.7" />
+            <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="currentColor" />
             <circle cx="18" cy="26" r="2" fill="white" opacity="0.7" />
             <circle cx="32" cy="16" r="2" fill="white" opacity="0.7" />
             <circle cx="46" cy="26" r="2" fill="white" opacity="0.7" />
           </svg>
-          <span style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 17, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Mashroom</span>
+          <span className="text-foreground font-bold text-[17px] tracking-[-0.02em]" style={{ fontFamily: "Geist, sans-serif" }}>Mashroom</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, padding: "6px 14px" }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e", animation: "pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 11, fontWeight: 600, color: "rgb(80,80,80)", letterSpacing: "0.06em" }}>SECURE LOGIN</span>
+          <span className="text-muted-foreground font-semibold text-[11px] tracking-[0.06em]" style={{ fontFamily: "Geist, sans-serif" }}>SECURE LOGIN</span>
         </div>
       </div>
 
@@ -129,8 +129,8 @@ function LoginPageInner({ loading }: { loading: boolean }) {
           width: "100%",
           maxWidth: 420,
           margin: "0 16px",
-          background: "rgb(255,255,255)",
-          border: "1px solid rgb(226,232,240)",
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--border))",
           borderRadius: 20,
           boxShadow: "0 8px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
           padding: "44px 40px 36px",
@@ -144,19 +144,19 @@ function LoginPageInner({ loading }: { loading: boolean }) {
         {/* Logo + heading */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgb(243,244,246)", border: "1px solid rgb(226,232,240)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-                <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-                <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(40,40,40)" />
-                <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
+                <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="currentColor" />
+                <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="currentColor" opacity="0.7" />
+                <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="currentColor" />
                 <circle cx="18" cy="26" r="2" fill="white" opacity="0.7" />
                 <circle cx="32" cy="16" r="2" fill="white" opacity="0.7" />
                 <circle cx="46" cy="26" r="2" fill="white" opacity="0.7" />
               </svg>
             </div>
           </div>
-          <h1 style={{ fontFamily: "Geist, sans-serif", fontSize: 26, fontWeight: 800, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.03em" }}>Welcome back</h1>
-          <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 14, color: "rgb(100,116,139)", margin: "8px 0 0" }}>Sign in to your AI workspace</p>
+          <h1 className="text-foreground font-extrabold text-[26px] m-0 tracking-[-0.03em]" style={{ fontFamily: "Geist, sans-serif" }}>Welcome back</h1>
+          <p className="text-muted-foreground text-[14px] mt-2 m-0" style={{ fontFamily: '"DM Sans", sans-serif' }}>Sign in to your AI workspace</p>
         </div>
 
         {/* Auth widget */}
@@ -170,28 +170,28 @@ function LoginPageInner({ loading }: { loading: boolean }) {
 
         {/* Divider */}
         <div style={{ margin: "24px 0 20px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ flex: 1, height: 1, background: "rgb(226,232,240)" }} />
-          <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(148,163,184)", letterSpacing: "0.05em" }}>TRUSTED BY THOUSANDS</span>
-          <div style={{ flex: 1, height: 1, background: "rgb(226,232,240)" }} />
+          <div style={{ flex: 1, height: 1, background: "hsl(var(--border))" }} />
+          <span className="text-muted-foreground/60 text-[11px] tracking-[0.05em]" style={{ fontFamily: '"DM Sans", sans-serif' }}>TRUSTED BY THOUSANDS</span>
+          <div style={{ flex: 1, height: 1, background: "hsl(var(--border))" }} />
         </div>
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
           {[["2000+", "Integrations"], ["99.9%", "Uptime"], ["24/7", "Support"]].map(([val, label]) => (
-            <div key={label} style={{ textAlign: "center", background: "rgb(248,249,251)", borderRadius: 10, padding: "10px 6px", border: "1px solid rgb(226,232,240)" }}>
-              <div style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 15, color: "rgb(10,10,10)" }}>{val}</div>
-              <div style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 10, color: "rgb(148,163,184)", letterSpacing: "0.05em", marginTop: 2 }}>{label.toUpperCase()}</div>
+            <div key={label} style={{ textAlign: "center", background: "hsl(var(--background))", borderRadius: 10, padding: "10px 6px", border: "1px solid hsl(var(--border))" }}>
+              <div className="text-foreground font-bold text-[15px]" style={{ fontFamily: "Geist, sans-serif" }}>{val}</div>
+              <div className="text-muted-foreground/60 text-[10px] tracking-[0.05em] mt-[2px]" style={{ fontFamily: '"DM Sans", sans-serif' }}>{label.toUpperCase()}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Footer */}
-      <p style={{ position: "relative", zIndex: 1, marginTop: 24, textAlign: "center", fontSize: 11, color: "rgb(148,163,184)", fontFamily: '"DM Sans", sans-serif', lineHeight: 1.7 }}>
+      <p className="text-muted-foreground/60 text-[11px] text-center leading-[1.7]" style={{ position: "relative", zIndex: 1, marginTop: 24, fontFamily: '"DM Sans", sans-serif' }}>
         By continuing, you agree to{" "}
-        <a href="https://viasocket.com/terms/" target="_blank" rel="noreferrer" style={{ color: "rgb(100,116,139)", textDecoration: "none", fontWeight: 600 }}>Terms of Service</a>
+        <a href="https://viasocket.com/terms/" target="_blank" rel="noreferrer" className="text-muted-foreground font-semibold no-underline">Terms of Service</a>
         {" "}and{" "}
-        <a href="https://viasocket.com/privacy/" target="_blank" rel="noreferrer" style={{ color: "rgb(100,116,139)", textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>
+        <a href="https://viasocket.com/privacy/" target="_blank" rel="noreferrer" className="text-muted-foreground font-semibold no-underline">Privacy Policy</a>
       </p>
     </div>
   );

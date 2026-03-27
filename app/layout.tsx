@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import ThemeProvider from "./components/ThemeProvider";
 
 export const runtime = "edge";
 
@@ -20,10 +21,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="light"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col"><Providers>{children}</Providers></body>
+      <body className="min-h-full flex flex-col"><ThemeProvider><Providers>{children}</Providers></ThemeProvider></body>
     </html>
   );
 }

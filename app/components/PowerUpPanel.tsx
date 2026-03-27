@@ -74,17 +74,13 @@ export default function PowerUpPanel({ onClose }: Omit<PowerUpPanelProps, "onSel
   }, [mcpServerId, dispatch]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-card border border-border rounded-md shadow-sm">
       {/* Header */}
-      <div
-        className="shrink-0 flex items-center justify-between px-4"
-        style={{ height: 44, borderBottom: "1px solid rgb(226,232,240)", background: "rgb(250,251,252)" }}
-      >
-        <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "-0.01em" }}></span>
+      <div className="shrink-0 flex items-center justify-between px-4 h-11 border-b border-border bg-muted/50">
+        <span className="text-foreground font-semibold text-[13px] tracking-[-0.01em]" style={{ fontFamily: "Geist, sans-serif" }}></span>
         <button
           onClick={onClose}
-          className="flex items-center justify-center cursor-pointer"
-          style={{ background: "transparent", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 6, borderRadius: 4 }}
+          className="flex items-center justify-center cursor-pointer bg-transparent text-muted-foreground border-0 shadow-none p-1.5 rounded"
         >
           <X width={18} height={18} strokeWidth={2.5} />
         </button>

@@ -62,28 +62,27 @@ function ToolCards({ clusterId, onOpenPanel }: { clusterId: string; onOpenPanel:
       {tools.map((tool) => (
         <div
           key={tool.flowId}
-          className="relative overflow-hidden group/card"
-          style={{ background: "rgb(255,255,255)", border: "1px solid rgb(203,213,225)", transition: "box-shadow 0.2s, border-color 0.2s", borderRadius: 4, boxShadow: "rgba(0,0,0,0.06) 0px 2px 8px, rgba(0,0,0,0.03) 0px 0px 0px 1px" }}
+          className="relative overflow-hidden group/card bg-card border border-border rounded" style={{ transition: "box-shadow 0.2s, border-color 0.2s", boxShadow: "rgba(0,0,0,0.06) 0px 2px 8px, rgba(0,0,0,0.03) 0px 0px 0px 1px" }}
         >
           <button onClick={() => handleToolClick(tool)} className="w-full flex items-center gap-2.5 px-3 py-3 cursor-pointer border-0 text-left" style={{ background: "transparent" }}>
             <div className="flex items-center shrink-0" style={{ gap: 2 }}>
               {tool.serviceIcons && tool.serviceIcons.length > 0 ? (
                 tool.serviceIcons.map((icon, i) => (
-                  <div key={i} className="w-7 h-7 flex items-center justify-center" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", marginLeft: i > 0 ? -6 : 0, zIndex: tool.serviceIcons.length - i }}>
+                  <div key={i} className="w-7 h-7 flex items-center justify-center bg-card border border-border rounded-md shadow-xs" style={{ marginLeft: i > 0 ? -6 : 0, zIndex: tool.serviceIcons.length - i }}>
                     <img src={icon} alt="" style={{ width: 16, height: 16, objectFit: "contain" }} />
                   </div>
                 ))
               ) : (
-                <div className="w-7 h-7 flex items-center justify-center shrink-0" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>
-                  <Zap width={15} height={15} style={{ color: "rgb(100,116,139)" }} />
+                <div className="w-7 h-7 flex items-center justify-center shrink-0 bg-card border border-border rounded-md shadow-xs">
+                  <Zap width={15} height={15} className="text-muted-foreground" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0 flex items-center gap-1.5">
-              <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>{tool.name}</p>
+              <p className="truncate text-foreground font-bold text-[13px] tracking-[-0.01em] m-0" style={{ fontFamily: "Geist, sans-serif" }}>{tool.name}</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <ChevronRight width={11} height={11} strokeWidth={2.5} className="group-hover/card:text-[#64748b] group-hover/card:translate-x-0.5" style={{ color: "rgb(176,184,196)", transition: "color 0.15s, transform 0.15s" }} />
+              <ChevronRight width={11} height={11} strokeWidth={2.5} className="text-muted-foreground group-hover/card:text-foreground group-hover/card:translate-x-0.5" style={{ transition: "color 0.15s, transform 0.15s" }} />
             </div>
           </button>
         </div>
@@ -134,8 +133,8 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 cursor-pointer"
-      style={{ background: "rgb(243,244,246)", border: "1px solid rgb(226,232,240)", borderRadius: 4, padding: "4px 10px", fontSize: 12, fontFamily: "Geist, sans-serif", fontWeight: 500, color: "rgb(60,60,60)" }}
+      className="flex items-center gap-1.5 cursor-pointer bg-muted border border-border rounded text-foreground text-[12px] font-medium"
+      style={{ fontFamily: "Geist, sans-serif", padding: "4px 10px" }}
     >
       {copied ? <Check width={13} height={13} /> : <Copy width={13} height={13} />}
       {copied ? "Copied" : "Copy"}
@@ -183,13 +182,12 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="relative flex flex-col"
-        style={{ background: "#fff", borderRadius: 14, width: "min(820px, 94vw)", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 12px 48px rgba(0,0,0,0.22)" }}
+        className="bg-card rounded-[14px] relative flex flex-col" style={{ width: "min(820px, 94vw)", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 12px 48px rgba(0,0,0,0.22)" }}
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between px-7 pt-6 pb-5" style={{ borderBottom: "1px solid rgb(235,237,242)" }}>
+        <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-border">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 flex items-center justify-center rounded-xl shrink-0 overflow-hidden" style={{ background: selectedClient?.icon ? "transparent" : "rgb(252,241,236)" }}>
+            <div className="w-11 h-11 flex items-center justify-center rounded-xl shrink-0 overflow-hidden bg-muted" style={{ background: selectedClient?.icon ? "transparent" : undefined }}>
               {selectedClient?.icon ? (
                 <img src={selectedClient.icon} alt={selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
               ) : (
@@ -197,14 +195,13 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
               )}
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Cluster Configuration</h2>
-              <p style={{ margin: 0, fontSize: 13, color: "rgb(120,132,154)", fontFamily: "Geist, sans-serif", marginTop: 1 }}>{selectedClient?.title ?? cluster.client}</p>
+              <h2 className="text-foreground font-bold text-[19px] tracking-[-0.02em] m-0" style={{ fontFamily: "Geist, sans-serif" }}>Cluster Configuration</h2>
+              <p className="text-muted-foreground text-[13px] mt-[1px] m-0" style={{ fontFamily: "Geist, sans-serif" }}>{selectedClient?.title ?? cluster.client}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="cursor-pointer flex items-center justify-center"
-            style={{ background: "transparent", border: "none", color: "rgb(160,170,185)", padding: 4, borderRadius: 6, lineHeight: 0 }}
+            className="cursor-pointer flex items-center justify-center bg-transparent border-0 text-muted-foreground p-1 rounded-md leading-none"
           >
             <X width={20} height={20} strokeWidth={2} />
           </button>
@@ -221,52 +218,52 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 
               {/* MCP URL */}
               <div>
-                <p style={{ margin: "0 0 7px", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif", textTransform: "uppercase" }}>MCP URL</p>
+                <p className="text-muted-foreground font-bold text-[11px] uppercase tracking-[0.07em] m-0 mb-[7px]" style={{ fontFamily: "Geist, sans-serif" }}>MCP URL</p>
                 <div
-                  className="flex items-center justify-between gap-3 px-4"
-                  style={{ background: "#fff", border: "1.5px solid rgb(220,225,234)", borderRadius: 8, height: 46 }}
+                  className="flex items-center justify-between gap-3 px-4 bg-card border-[1.5px] border-input rounded-lg"
+                  style={{ height: 46 }}
                 >
-                  <span style={{ fontSize: 13, fontFamily: "monospace", color: "rgb(25,25,25)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mcpUrl}</span>
+                  <span className="text-foreground text-[13px] flex-1 overflow-hidden text-ellipsis whitespace-nowrap" style={{ fontFamily: "monospace" }}>{mcpUrl}</span>
                   <CopyButton text={mcpUrl} />
                 </div>
               </div>
 
               {/* JSON Config */}
               <div>
-                <p style={{ margin: "0 0 7px", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif", textTransform: "uppercase" }}>JSON Config</p>
-                <div className="relative" style={{ background: "rgb(22,22,24)", borderRadius: 10, padding: "14px 18px 18px" }}>
+                <p className="text-muted-foreground font-bold text-[11px] uppercase tracking-[0.07em] m-0 mb-[7px]" style={{ fontFamily: "Geist, sans-serif" }}>JSON Config</p>
+                <div className="relative bg-primary rounded-[10px]" style={{ padding: "14px 18px 18px" }}>
                   <div className="flex justify-end mb-2">
                     <CopyButton text={configJson} />
                   </div>
-                  <pre style={{ margin: 0, fontSize: 13, color: "rgb(210,230,210)", fontFamily: "'JetBrains Mono', 'Fira Mono', monospace", lineHeight: 1.65, whiteSpace: "pre", overflowX: "auto" }}>{configJson}</pre>
+                  <pre className="text-primary-foreground text-[13px] m-0 leading-[1.65] whitespace-pre overflow-x-auto" style={{ fontFamily: "'JetBrains Mono', 'Fira Mono', monospace" }}>{configJson}</pre>
                 </div>
               </div>
             </div>
 
             {/* Right: setup steps — no card borders, just circle + text */}
             <div className="shrink-0 flex flex-col" style={{ width: 230 }}>
-              <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif", textTransform: "uppercase" }}>Setup Steps</p>
-              <div className="flex flex-col" style={{ border: "1.5px solid rgb(220,225,234)", borderRadius: 10, overflow: "hidden" }}>
+              <p className="text-muted-foreground font-bold text-[11px] uppercase tracking-[0.07em] m-0 mb-[14px]" style={{ fontFamily: "Geist, sans-serif" }}>Setup Steps</p>
+              <div className="flex flex-col border-[1.5px] border-input rounded-[10px] overflow-hidden">
                 {steps.map((step, i) => (
                   <div
                     key={step.num}
                     className="flex items-start gap-3 px-4 py-3.5"
-                    style={{ borderTop: i === 0 ? "none" : "1px solid rgb(235,237,242)" }}
+                    style={{ borderTop: i === 0 ? "none" : "1px solid hsl(var(--border))" }}
                   >
                     <div
                       className="flex items-center justify-center shrink-0 rounded-full"
                       style={{
                         width: 26, height: 26, fontSize: 12, fontWeight: 700, marginTop: 1,
-                        background: step.done ? "rgb(10,10,10)" : "#fff",
-                        border: step.done ? "none" : "1.5px solid rgb(200,206,216)",
-                        color: step.done ? "#fff" : "rgb(80,90,110)",
+                        background: step.done ? "hsl(var(--primary))" : "hsl(var(--card))",
+                        border: step.done ? "none" : "1.5px solid hsl(var(--border))",
+                        color: step.done ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))",
                       }}
                     >
                       {step.done ? <Check width={13} height={13} strokeWidth={3} /> : step.num}
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", lineHeight: 1.3 }}>{step.title}</p>
-                      <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgb(120,132,154)", fontFamily: "Geist, sans-serif", lineHeight: 1.4 }}>{step.desc}</p>
+                      <p className="text-foreground font-semibold text-[13px] m-0 leading-[1.3]" style={{ fontFamily: "Geist, sans-serif" }}>{step.title}</p>
+                      <p className="text-muted-foreground text-[12px] m-0 mt-[3px] leading-[1.4]" style={{ fontFamily: "Geist, sans-serif" }}>{step.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -276,8 +273,8 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 
           {/* Video — full width below */}
           <div
-            className="relative flex flex-col items-center justify-center cursor-pointer overflow-hidden w-full"
-            style={{ background: "rgb(14,14,18)", borderRadius: 12, minHeight: 200 }}
+            className="relative flex flex-col items-center justify-center cursor-pointer overflow-hidden w-full bg-primary rounded-xl"
+            style={{ minHeight: 200 }}
           >
             <div className="flex flex-col items-center gap-2.5 relative z-10">
               <div
@@ -293,11 +290,10 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
         </div>
 
         {/* Modal footer */}
-        <div className="flex justify-end px-7 py-4" style={{ borderTop: "1px solid rgb(235,237,242)" }}>
+        <div className="flex justify-end px-7 py-4 border-t border-border">
           <button
             onClick={onClose}
-            className="flex items-center gap-2 cursor-pointer"
-            style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 14, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em" }}
+            className="flex items-center gap-2 cursor-pointer bg-primary text-primary-foreground border-0 rounded-[7px] text-[14px] font-semibold tracking-[-0.01em]" style={{ fontFamily: "Geist, sans-serif", padding: "10px 22px" }}
           >
             Done
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -411,13 +407,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
   }, [embedToken]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* Header */}
       <div className="shrink-0">
-        <div className="w-full px-6" style={{ background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
+        <div className="w-full px-6 bg-card border-b border-border">
           <div className="flex items-center justify-between h-16 w-full">
             <div className="flex-1 min-w-0 flex items-center self-stretch">
-              <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              <h2 className="text-foreground font-extrabold text-[22px] tracking-[-0.03em] m-0" style={{ fontFamily: "Geist, sans-serif" }}>
                 {cluster.name}
               </h2>
             </div>
@@ -429,8 +425,8 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                 {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
                 <button
                   onClick={() => setShowAccount((v) => !v)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer bg-primary"
+                  style={{ border: "none", flexShrink: 0 }}
                 >
                   <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
                 </button>
@@ -446,8 +442,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
 
           {/* Client card */}
             <div
-              className="overflow-visible relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderBottom: "none", boxShadow: "none", borderRadius: "6px 6px 0 0" }}
+              className="overflow-visible relative bg-card border border-border" style={{ borderBottom: "none", boxShadow: "none", borderRadius: "6px 6px 0 0" }}
               onMouseEnter={() => setHeaderHovered(true)}
               onMouseLeave={() => setHeaderHovered(false)}
             >
@@ -460,20 +455,15 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                   ) : (
                     <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
                   )}
-                  <span style={{ color: "rgb(10,10,10)", fontSize: 15, fontFamily: "Geist, sans-serif" }}>{cluster.selectedClient?.title ?? cluster.client}</span>
+                  <span className="text-foreground text-[15px]" style={{ fontFamily: "Geist, sans-serif" }}>{cluster.selectedClient?.title ?? cluster.client}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   {/* Change AI Client — visible on hover */}
                   <button
                     onClick={onChangeClient}
-                    className="flex items-center gap-2 cursor-pointer"
-                    style={{
-                      background: "rgb(255,255,255)", color: "rgb(10,10,10)", border: "1px solid rgb(196,201,212)",
-                      fontSize: 12, padding: "6px 14px", height: 34, fontFamily: "Geist, sans-serif", fontWeight: 600,
-                      letterSpacing: "-0.01em", borderRadius: 4, transition: "opacity 0.15s",
-                      opacity: headerHovered ? 1 : 0, pointerEvents: headerHovered ? "auto" : "none",
-                    }}
+                    className="flex items-center gap-2 cursor-pointer bg-secondary text-foreground border border-border text-[12px] font-semibold tracking-[-0.01em] rounded"
+                    style={{ fontSize: 12, padding: "6px 14px", height: 34, fontFamily: "Geist, sans-serif", transition: "opacity 0.15s", opacity: headerHovered ? 1 : 0, pointerEvents: headerHovered ? "auto" : "none" }}
                   >
                     Change AI Client
                   </button>
@@ -483,8 +473,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                     <div className="relative group">
                       <button
                         onClick={() => setShowConfigModal(true)}
-                        className="flex items-center gap-2 cursor-pointer"
-                        style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", fontSize: 13, padding: "0px 16px", height: 34, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 4 }}
+                        className="flex items-center gap-2 cursor-pointer bg-primary text-primary-foreground border-0 text-[13px] font-semibold tracking-[-0.01em] rounded" style={{ fontSize: 13, padding: "0px 16px", height: 34, fontFamily: "Geist, sans-serif" }}
                       >
                         Connect
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
@@ -492,14 +481,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
 
                       {/* Tooltip — shown on hover */}
                       <div
-                        className="absolute z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                        style={{ top: "calc(100% + 8px)", right: 0, background: "rgb(10,10,10)", color: "#fff", borderRadius: 8, padding: "10px 14px", width: 220, boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}
+                        className="absolute z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-primary text-primary-foreground rounded-lg" style={{ top: "calc(100% + 8px)", right: 0, padding: "10px 14px", width: 220, boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}
                       >
                         <p style={{ margin: 0, fontSize: 13, fontFamily: "Geist, sans-serif", lineHeight: 1.45 }}>
                           Your power-ups are ready. Connect your client to activate them.
                         </p>
                         {/* Arrow */}
-                        <div style={{ position: "absolute", top: -6, right: 16, width: 12, height: 12, background: "rgb(10,10,10)", transform: "rotate(45deg)", borderRadius: 2 }} />
+                        <div style={{ position: "absolute", top: -6, right: 16, width: 12, height: 12, background: "hsl(var(--primary))", transform: "rotate(45deg)", borderRadius: 2 }} />
                       </div>
                     </div>
                   )}
@@ -509,29 +497,27 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
           {/* Power-ups area */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             <div
-              className="flex-1 min-h-0 overflow-hidden flex flex-col relative"
-              style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderTop: "1px solid rgb(226,232,240)", borderRadius: "0 0 6px 6px", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
+              className="flex-1 min-h-0 overflow-hidden flex flex-col relative bg-card border border-border" style={{ borderRadius: "0 0 6px 6px", boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}
             >
               {!showPanel && (
                 <div className="shrink-0 px-3 pt-3 pb-3">
                   <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
                     <button
                       onClick={() => setShowPanel(true)}
-                      className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
-                      style={{ background: "rgb(250,251,252)", border: "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s", borderRadius: 4 }}
+                      className="relative overflow-hidden group/add cursor-pointer text-left" style={{ background: "hsl(var(--secondary))", border: "2px dashed hsl(var(--border))", transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s", borderRadius: 4 }}
                     >
                       <div className="flex items-center gap-2.5 px-3 py-3">
-                        <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
-                          <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
+                        <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full bg-muted border-[1.5px] border-border">
+                          <Plus width={16} height={16} strokeWidth={2} className="text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
+                          <p className="truncate text-foreground font-medium text-[13px] tracking-[-0.01em] m-0" style={{ fontFamily: "Geist, sans-serif" }}>Add Power-Up</p>
                         </div>
                       </div>
                     </button>
                     {!toolsHasFetched
                       ? [1, 2, 3].map((i) => (
-                          <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
+                          <div key={i} className="bg-muted rounded" style={{ height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
                         ))
                       : <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} />}
                   </div>
@@ -553,14 +539,12 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
                 {/* Panel header — shown only after embed iframe is ready */}
                 {embedReady && (
                   <div
-                    className="shrink-0 flex items-center justify-between px-4"
-                    style={{ height: 44, borderBottom: "1px solid rgb(226,232,240)", background: "rgb(250,251,252)", borderRadius: "6px 6px 0 0" }}
+                    className="shrink-0 flex items-center justify-between px-4 bg-muted/50 border-b border-border" style={{ height: 44, borderRadius: "6px 6px 0 0" }}
                   >
-                    <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "-0.01em" }}></span>
+                    <span className="text-foreground font-semibold text-[13px] tracking-[-0.01em]" style={{ fontFamily: "Geist, sans-serif" }}></span>
                     <button
                       onClick={() => setShowPanel(false)}
-                      className="flex items-center justify-center cursor-pointer"
-                      style={{ background: "transparent", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 6, borderRadius: 4 }}
+                      className="flex items-center justify-center cursor-pointer bg-transparent text-muted-foreground border-0 shadow-none p-1.5 rounded"
                     >
                       <X width={18} height={18} strokeWidth={2.5} />
                     </button>
@@ -572,13 +556,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
 
               {!showPanel && toolsHasFetched && tools.length === 0 && (
                 <div className="flex-1 flex flex-col items-center justify-center text-center px-10">
-                  <div className="w-14 h-14 flex items-center justify-center mb-5" style={{ borderRadius: 14, background: "rgb(243,244,246)", border: "1.5px solid rgb(229,231,235)" }}>
-                    <Zap width={22} height={22} strokeWidth={2} style={{ color: "rgb(148,163,184)" }} />
+                  <div className="w-14 h-14 flex items-center justify-center mb-5 bg-muted rounded-[14px]" style={{ border: "1.5px solid hsl(var(--border))" }}>
+                    <Zap width={22} height={22} strokeWidth={2} className="text-muted-foreground" />
                   </div>
-                  <p style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 17, margin: 0, letterSpacing: "-0.01em" }}>No power-ups yet</p>
-                  <p style={{ color: "rgb(120,132,154)", fontFamily: '"DM Sans", sans-serif', fontSize: 14, margin: "8px 0 0", lineHeight: 1.55, maxWidth: 320 }}>
+                  <p className="text-foreground font-bold text-[17px] m-0 tracking-[-0.01em]" style={{ fontFamily: "Geist, sans-serif" }}>No power-ups yet</p>
+                  <p className="text-muted-foreground text-[14px] leading-[1.55] mt-2 m-0" style={{ fontFamily: '"DM Sans", sans-serif', maxWidth: 320 }}>
                     Add your first power-up to give{" "}
-                    <strong style={{ color: "rgb(10,10,10)", fontWeight: 600 }}>{cluster.client}</strong>{" "}
+                    <strong className="text-foreground font-semibold">{cluster.client}</strong>{" "}
                     real-world actions across 2,000+ apps.
                   </p>
                 </div>

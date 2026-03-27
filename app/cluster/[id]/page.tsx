@@ -96,7 +96,7 @@ export default function ClusterPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
+    <div className="min-h-screen flex bg-background">
       <Sidebar
         clusters={clusters}
         activeClusterId={id}
@@ -119,21 +119,21 @@ export default function ClusterPage() {
             Cluster not found.
           </div>
         ) : (
-          <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
+          <div className="flex flex-col h-screen overflow-hidden bg-background">
             {/* Header skeleton */}
-            <div className="shrink-0 px-6" style={{ background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)", height: 64, display: "flex", alignItems: "center" }}>
-              <div style={{ width: 180, height: 22, borderRadius: 6, background: "rgb(226,232,240)", animation: "pulse 1.4s ease-in-out infinite" }} />
+            <div className="shrink-0 px-6 bg-card border-b border-border flex items-center" style={{ height: 64 }}>
+              <div className="bg-muted rounded-md" style={{ width: 180, height: 22, animation: "pulse 1.4s ease-in-out infinite" }} />
             </div>
             {/* Content skeleton */}
             <div className="flex-1 px-4 pt-4 pb-3 flex justify-center">
               <div className="w-full flex flex-col gap-4" style={{ maxWidth: 1100 }}>
                 {/* Client card skeleton */}
-                <div style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, height: 64, animation: "pulse 1.4s ease-in-out infinite" }} />
+                <div className="bg-card border border-border rounded-md" style={{ height: 64, animation: "pulse 1.4s ease-in-out infinite" }} />
                 {/* Tools area skeleton */}
-                <div style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, padding: "12px" }}>
+                <div className="bg-card border border-border rounded-lg" style={{ padding: "12px" }}>
                   <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} style={{ height: 58, borderRadius: 4, background: "rgb(243,244,246)", animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
+                      <div key={i} className="bg-muted rounded" style={{ height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
                     ))}
                   </div>
                 </div>

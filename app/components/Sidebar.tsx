@@ -82,18 +82,18 @@ export default function Sidebar({
 
   return (
     <aside
-      className="shrink-0 h-screen sticky top-0 flex flex-col border-r"
-      style={{ width: 260, background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)" }}
+      className="shrink-0 h-screen sticky top-0 flex flex-col border-r bg-card border-border"
+      style={{ width: 260 }}
     >
       {/* Logo */}
-      <div className="px-5 flex items-center gap-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
+      <div className="px-5 flex items-center gap-3 border-b border-border">
         <a className="flex items-center gap-2.5 no-underline h-16" href="/">
           <div className="w-8 h-8 flex items-center justify-center">
             <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
-              <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#1a1a1a" />
-              <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#0a0a0a" />
-              <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="#1a1a1a" opacity="0.3" />
+              <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="currentColor" />
+              <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="currentColor" opacity="0.8" />
+              <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="currentColor" />
+              <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="currentColor" opacity="0.2" />
               <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
               <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
               <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
@@ -102,8 +102,8 @@ export default function Sidebar({
             </svg>
           </div>
           <div className="flex flex-col">
-            <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
-            <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
+            <span className="text-foreground font-extrabold text-[22px] tracking-[-0.03em] leading-none" style={{ fontFamily: "Geist, sans-serif" }}>Mushrooms</span>
+            <span className="text-[10px] tracking-widest uppercase text-muted-foreground">by viasocket</span>
           </div>
         </a>
       </div>
@@ -113,21 +113,8 @@ export default function Sidebar({
         <div className="mb-4">
           <button
             onClick={onNewCluster}
-            className="flex items-center gap-2 cursor-pointer w-full justify-center"
-            style={{
-              background: "rgb(255,255,255)",
-              color: "rgb(10,10,10)",
-              border: "1px solid rgb(196,201,212)",
-              boxShadow: "none",
-              fontSize: 14,
-              padding: "10px 36px",
-              height: 34,
-              fontFamily: "Geist, sans-serif",
-              fontWeight: 600,
-              letterSpacing: "-0.01em",
-              borderRadius: 4,
-              transition: "box-shadow 0.15s",
-            }}
+            className="flex items-center gap-2 cursor-pointer w-full justify-center bg-card text-foreground border border-border rounded text-sm font-semibold tracking-[-0.01em] transition-shadow"
+            style={{ fontSize: 14, padding: "10px 36px", height: 34, fontFamily: "Geist, sans-serif" }}
           >
             <Plus width={14} height={14} strokeWidth={2.5} />
             New Cluster
@@ -137,22 +124,22 @@ export default function Sidebar({
         <div className="flex flex-col gap-1.5">
           {!hasFetched && (
             [1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-2.5 px-3 py-2" style={{ borderRadius: 4, height: 36 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 4, background: "rgb(226,232,240)", flexShrink: 0, animation: "pulse 1.4s ease-in-out infinite" }} />
-                <div style={{ flex: 1, height: 11, borderRadius: 4, background: "rgb(226,232,240)", animation: "pulse 1.4s ease-in-out infinite", animationDelay: "0.1s" }} />
+              <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded h-9">
+                <div className="w-5 h-5 rounded bg-muted shrink-0" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
+                <div className="flex-1 h-[11px] rounded bg-muted" style={{ animation: "pulse 1.4s ease-in-out infinite", animationDelay: "0.1s" }} />
               </div>
             ))
           )}
           {hasFetched && clusters.length === 0 && (
-            <div className="flex flex-col items-center gap-2 px-2 py-4" style={{ background: "rgb(248,249,251)", border: "1px solid rgb(226,232,240)", borderRadius: 6 }}>
-              <div className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
+            <div className="flex flex-col items-center gap-2 px-2 py-4 bg-background border border-border rounded-md">
+              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-muted border border-border">
                 <svg width="18" height="18" viewBox="0 0 64 64" fill="none">
-                  <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(180,186,196)" />
-                  <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(160,166,176)" />
-                  <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(180,186,196)" />
+                  <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="currentColor" className="text-muted-foreground" />
+                  <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="currentColor" opacity="0.7" />
+                  <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="currentColor" />
                 </svg>
               </div>
-              <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: 0, textAlign: "center", lineHeight: 1.4 }}>
+              <p className="text-[11px] text-muted-foreground text-center leading-[1.4] m-0" style={{ fontFamily: '"DM Sans", sans-serif' }}>
                 No clusters yet. Create one to start powering up your AI.
               </p>
             </div>
@@ -163,17 +150,15 @@ export default function Sidebar({
               <div key={cluster.id} className="relative">
                 <button
                   onClick={() => onSelectCluster(cluster.id)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all rounded cursor-pointer"
                   style={{
-                    borderRadius: 4,
-                    background: isActive ? "rgb(240,241,243)" : "transparent",
-                    color: isActive ? "rgb(10,10,10)" : "rgb(100,116,139)",
                     fontFamily: '"DM Sans", sans-serif',
-                    border: isActive ? "1px solid rgb(208,212,219)" : "1px solid rgb(232,235,240)",
+                    background: isActive ? "hsl(var(--muted))" : "transparent",
+                    color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    border: isActive ? "1px solid hsl(var(--border))" : "1px solid transparent",
                     boxShadow: isActive ? "rgba(0,0,0,0.06) 0px 1px 3px" : "none",
                     fontWeight: isActive ? 600 : 400,
                     transition: "0.15s",
-                    cursor: "pointer",
                   }}
                 >
                   <ClusterIcon cluster={cluster} active={isActive} />
@@ -188,13 +173,12 @@ export default function Sidebar({
       {/* Explore Embed */}
       <div className="px-3 pb-3">
         <div
-          className="px-4 py-3 cursor-pointer"
-          style={{ background: "rgb(248,249,251)", border: "1px solid rgb(226,232,240)" }}
+          className="px-4 py-3 cursor-pointer bg-background border border-border"
           onClick={() => router.push("/embed")}
         >
-          <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, color: "rgb(10,10,10)", margin: 0 }}>Explore Embed</p>
-          <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: "2px 0 6px" }}>Built for AI startups, agents &amp; companies shipping AI products</p>
-          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 12, fontWeight: 600, color: "#5CD2A2", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <p className="text-foreground font-bold text-[13px] m-0" style={{ fontFamily: "Geist, sans-serif" }}>Explore Embed</p>
+          <p className="text-muted-foreground text-[11px] mt-[2px] mb-[6px] m-0" style={{ fontFamily: '"DM Sans", sans-serif' }}>Built for AI startups, agents &amp; companies shipping AI products</p>
+          <span className="text-accent-green text-[12px] font-semibold inline-flex items-center gap-1" style={{ fontFamily: "Geist, sans-serif" }}>
             See what&apos;s inside <ArrowRight width={11} height={11} strokeWidth={2.5} />
           </span>
         </div>

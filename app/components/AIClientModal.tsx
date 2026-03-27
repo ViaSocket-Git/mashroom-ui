@@ -26,19 +26,18 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col z-10"
-        style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", boxShadow: "rgba(0,0,0,0.12) 0px 25px 50px, rgba(0,0,0,0.03) 0px 0px 0px 1px", height: "85vh", borderRadius: 4 }}
+        className="relative w-full max-w-[720px] max-h-[85vh] overflow-hidden flex flex-col z-10 bg-card border border-border rounded"
+        style={{ boxShadow: "rgba(0,0,0,0.12) 0px 25px 50px, rgba(0,0,0,0.03) 0px 0px 0px 1px", height: "85vh" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-7 py-5 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
+        <div className="flex items-center justify-between px-7 py-5 border-b border-border">
           <div>
-            <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", fontSize: 20, letterSpacing: "-0.02em", margin: 0 }}>Choose your AI client</h2>
-            <p className="mt-1 text-sm" style={{ color: "rgb(100,116,139)", margin: "4px 0 0" }}>Which AI are you powering up?</p>
+            <h2 className="text-foreground text-[20px] tracking-[-0.02em] m-0" style={{ fontFamily: "Geist, sans-serif" }}>Choose your AI client</h2>
+            <p className="text-muted-foreground text-sm mt-1 m-0" style={{ marginTop: 4 }}>Which AI are you powering up?</p>
           </div>
           <button
             onClick={onClose}
-            className="flex items-center gap-2 cursor-pointer"
-            style={{ background: "rgba(0,0,0,0)", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 8, borderRadius: 4 }}
+            className="flex items-center gap-2 cursor-pointer bg-transparent text-muted-foreground border-0 shadow-none p-2 rounded"
           >
             <X width={18} height={18} strokeWidth={2} />
           </button>
@@ -46,15 +45,15 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
 
         {/* Search */}
         <div className="px-7 pt-5 pb-0">
-          <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: "rgb(248,250,252)", border: "1px solid rgb(226,232,240)", borderRadius: 4 }}>
-            <Search width={15} height={15} style={{ color: "rgb(148,163,184)", flexShrink: 0 }} />
+          <div className="flex items-center gap-2.5 px-4 py-2.5 bg-secondary border border-border rounded">
+            <Search width={15} height={15} className="text-muted-foreground shrink-0" />
             <input
               type="text"
               placeholder="Search clients..."
               value={search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent border-0 outline-none text-sm"
-              style={{ color: "rgb(10,10,10)", fontFamily: '"DM Sans", sans-serif' }}
+              className="flex-1 bg-transparent border-0 outline-none text-sm text-foreground"
+              style={{ fontFamily: '"DM Sans", sans-serif' }}
             />
           </div>
         </div>
@@ -62,7 +61,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
         {/* Grid */}
         <div className="px-7 py-5 overflow-y-auto flex-1">
           {loading && clients.length === 0 ? (
-            <div className="flex items-center justify-center h-32" style={{ color: "rgb(148,163,184)", fontFamily: "Geist, sans-serif", fontSize: 14 }}>
+            <div className="flex items-center justify-center h-32 text-muted-foreground text-[14px]" style={{ fontFamily: "Geist, sans-serif" }}>
               Loading...
             </div>
           ) : (
@@ -71,12 +70,10 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                 <button
                   key={client.id}
                   onClick={() => onSelect(client)}
-                  className="flex items-center gap-4 px-5 text-left border-0 cursor-pointer transition-all w-full"
-                  style={{ background: "rgba(0,0,0,0)", border: "1px solid rgb(238,239,242)", borderRadius: 4, boxShadow: "none", minHeight: 60, paddingTop: 14, paddingBottom: 14 }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(196,201,212)"; (e.currentTarget as HTMLButtonElement).style.background = "rgb(248,250,252)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(238,239,242)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0)"; }}
+                  className="flex items-center gap-4 px-5 text-left cursor-pointer transition-all w-full bg-transparent border border-border rounded hover:border-border hover:bg-secondary"
+                  style={{ boxShadow: "none", minHeight: 60, paddingTop: 14, paddingBottom: 14 }}
                 >
-                  <div style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div className="w-9 h-9 flex items-center justify-center shrink-0">
                     <img
                       src={client.icon}
                       alt={client.title}
@@ -87,9 +84,9 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span style={{ color: "rgb(74,85,104)", fontFamily: '"DM Sans", sans-serif', fontSize: 14 }}>{client.title}</span>
+                    <span className="text-foreground/70 text-[14px]" style={{ fontFamily: '"DM Sans", sans-serif' }}>{client.title}</span>
                     {client.popular && (
-                      <span style={{ display: "block", fontSize: 11, color: "rgb(148,163,184)", fontFamily: "Geist, sans-serif", marginTop: 1 }}>Popular</span>
+                      <span className="block text-[11px] text-muted-foreground mt-[1px]" style={{ fontFamily: "Geist, sans-serif" }}>Popular</span>
                     )}
                   </div>
                 </button>
