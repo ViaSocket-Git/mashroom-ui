@@ -122,6 +122,7 @@ export default function ClusterPage() {
             cluster={cluster}
             onAddPowerUp={handleAddPowerUp}
             onChangeClient={handleChangeClient}
+            hideSidebar={hideSidebar}
           />
         ) : hasFetched ? (
           <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm">

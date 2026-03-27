@@ -37,6 +37,7 @@ interface ClusterViewProps {
   cluster: Cluster;
   onAddPowerUp: () => void;
   onChangeClient: () => void;
+  hideSidebar?: boolean;
 }
 
 function ToolCards({ clusterId, onOpenPanel, onToolClick }: { clusterId: string; onOpenPanel: () => void; onToolClick: (flowId: string) => void }) {
@@ -309,6 +310,10 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 
 function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: Cluster; onChangeClient: () => void; hasTools: boolean }) {
   const [expanded, setExpanded] = useState(hasTools);
+
+  useEffect(() => {
+    if (hasTools) setExpanded(true);
+  }, [hasTools]);
   const selectedClient = useAppSelector((s) => s.clusters.selectedClientByClusterId[cluster.id]);
   const mcpUrl = cluster.url;
   const configJsonByType = {
@@ -414,7 +419,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
   );
 }
 
-export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: ClusterViewProps) {
+export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar }: ClusterViewProps) {
   const dispatch = useAppDispatch();
 
   const [showPanel, setShowPanel] = useState(false);
@@ -488,20 +493,27 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
       {/* Header */}
       <div className="shrink-0">
-        <div className="w-full px-6" style={{ background: "transparent" }}>
-          <div className="flex items-center justify-between h-16 w-full">
-            <div className="flex items-center gap-2.5">
-              {cluster.selectedClient?.icon ? (
-                <div style={{ width: 24, height: 24, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
-                  <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                </div>
-              ) : (
-                <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
-              )}
-              <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>
-                {cluster.name}
-              </h2>
-            </div>
+        {hideSidebar ? (
+          <div className="px-5 flex items-center justify-between border-b" style={{ borderColor: "rgb(226,232,240)", background: "rgb(255,255,255)" }}>
+            <a className="flex items-center gap-2.5 no-underline h-16" href="/">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
+                  <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#1a1a1a" />
+                  <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#0a0a0a" />
+                  <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="#1a1a1a" opacity="0.3" />
+                  <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
+                  <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
+                  <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
+                  <line x1="18" y1="26" x2="32" y2="16" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                  <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
+                <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
+              </div>
+            </a>
             <div ref={accountRef} className="relative">
               {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
               <button
@@ -513,7 +525,34 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient }: C
               </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full px-6" style={{ background: "transparent" }}>
+            <div className="flex items-center justify-between h-16 w-full">
+              <div className="flex items-center gap-2.5">
+                {cluster.selectedClient?.icon ? (
+                  <div style={{ width: 24, height: 24, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
+                    <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                ) : (
+                  <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
+                )}
+                <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>
+                  {cluster.name}
+                </h2>
+              </div>
+              <div ref={accountRef} className="relative">
+                {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+                <button
+                  onClick={() => setShowAccount((v) => !v)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                >
+                  <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content — stacked full width */}
