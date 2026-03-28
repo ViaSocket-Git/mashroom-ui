@@ -41,7 +41,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
         <div className="flex items-center justify-between px-7 py-5 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
           <div>
             <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", fontSize: 20, letterSpacing: "-0.02em", margin: 0 }}>Choose your AI client</h2>
-            <p className="mt-1 text-sm" style={{ color: "rgb(100,116,139)", margin: "4px 0 0" }}>Which AI are you powering up?</p>
+            <p className="mt-1 text-sm" style={{ color: "rgb(100,116,139)", margin: "4px 0 0" }}>Select an AI client to continue</p>
           </div>
           <button
             onClick={onClose}

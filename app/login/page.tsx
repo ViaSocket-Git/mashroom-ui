@@ -2,10 +2,11 @@
 
 export const runtime = "edge";
 
-import React, { useEffect, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setInCookies } from "@/lib/utils/cookies";
 import WithAuth from "@/app/components/WithAuth";
+import { integrationsApi } from "@/lib/api/integrationsApi";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
@@ -23,21 +24,21 @@ function MushroomSVG({ size = 40, opacity = 0.1 }: { size?: number; opacity?: nu
 }
 
 const MUSHROOMS = [
-  { size: 80,  top: "5%",   left: "4%",   delay: "0s",    duration: "7s",  opacity: 0.08, rotate: -15 },
-  { size: 48,  top: "12%",  left: "18%",  delay: "1.2s",  duration: "9s",  opacity: 0.06, rotate: 10  },
-  { size: 110, top: "3%",   left: "78%",  delay: "0.5s",  duration: "8s",  opacity: 0.07, rotate: 20  },
-  { size: 60,  top: "18%",  left: "90%",  delay: "2s",    duration: "6s",  opacity: 0.09, rotate: -5  },
-  { size: 36,  top: "38%",  left: "2%",   delay: "0.8s",  duration: "10s", opacity: 0.05, rotate: 8   },
-  { size: 90,  top: "55%",  left: "8%",   delay: "1.5s",  duration: "7.5s",opacity: 0.08, rotate: -20 },
-  { size: 44,  top: "70%",  left: "20%",  delay: "3s",    duration: "8.5s",opacity: 0.06, rotate: 15  },
-  { size: 70,  top: "80%",  left: "5%",   delay: "0.3s",  duration: "9.5s",opacity: 0.07, rotate: -10 },
-  { size: 55,  top: "88%",  left: "35%",  delay: "1.8s",  duration: "7s",  opacity: 0.05, rotate: 5   },
-  { size: 100, top: "75%",  left: "82%",  delay: "0.7s",  duration: "8s",  opacity: 0.08, rotate: -12 },
-  { size: 42,  top: "60%",  left: "94%",  delay: "2.2s",  duration: "6.5s",opacity: 0.06, rotate: 18  },
-  { size: 65,  top: "90%",  left: "70%",  delay: "1s",    duration: "9s",  opacity: 0.07, rotate: -8  },
-  { size: 38,  top: "45%",  left: "85%",  delay: "2.8s",  duration: "7.5s",opacity: 0.05, rotate: 12  },
-  { size: 52,  top: "30%",  left: "96%",  delay: "0.4s",  duration: "8.5s",opacity: 0.07, rotate: -18 },
-  { size: 78,  top: "48%",  left: "50%",  delay: "3.5s",  duration: "11s", opacity: 0.04, rotate: 6   },
+  { size: 80, top: "5%", left: "4%", delay: "0s", duration: "7s", opacity: 0.08, rotate: -15 },
+  { size: 48, top: "12%", left: "18%", delay: "1.2s", duration: "9s", opacity: 0.06, rotate: 10 },
+  { size: 110, top: "3%", left: "78%", delay: "0.5s", duration: "8s", opacity: 0.07, rotate: 20 },
+  { size: 60, top: "18%", left: "90%", delay: "2s", duration: "6s", opacity: 0.09, rotate: -5 },
+  { size: 36, top: "38%", left: "2%", delay: "0.8s", duration: "10s", opacity: 0.05, rotate: 8 },
+  { size: 90, top: "55%", left: "8%", delay: "1.5s", duration: "7.5s", opacity: 0.08, rotate: -20 },
+  { size: 44, top: "70%", left: "20%", delay: "3s", duration: "8.5s", opacity: 0.06, rotate: 15 },
+  { size: 70, top: "80%", left: "5%", delay: "0.3s", duration: "9.5s", opacity: 0.07, rotate: -10 },
+  { size: 55, top: "88%", left: "35%", delay: "1.8s", duration: "7s", opacity: 0.05, rotate: 5 },
+  { size: 100, top: "75%", left: "82%", delay: "0.7s", duration: "8s", opacity: 0.08, rotate: -12 },
+  { size: 42, top: "60%", left: "94%", delay: "2.2s", duration: "6.5s", opacity: 0.06, rotate: 18 },
+  { size: 65, top: "90%", left: "70%", delay: "1s", duration: "9s", opacity: 0.07, rotate: -8 },
+  { size: 38, top: "45%", left: "85%", delay: "2.8s", duration: "7.5s", opacity: 0.05, rotate: 12 },
+  { size: 52, top: "30%", left: "96%", delay: "0.4s", duration: "8.5s", opacity: 0.07, rotate: -18 },
+  { size: 78, top: "48%", left: "50%", delay: "3.5s", duration: "11s", opacity: 0.04, rotate: 6 },
 ];
 
 function FloatingMushrooms() {
@@ -64,6 +65,7 @@ function FloatingMushrooms() {
 
 function LoginPageInner({ loading }: { loading: boolean }) {
   const urlParams = useSearchParams();
+  const [appsCount, setAppsCount] = useState("1754+");
 
   const utmSource = urlParams.get("utm_source");
   const utmMedium = urlParams.get("utm_medium");
@@ -78,6 +80,16 @@ function LoginPageInner({ loading }: { loading: boolean }) {
     if (utmTerm) setInCookies("utm_term", utmTerm);
     if (utmContent) setInCookies("utm_content", utmContent);
   }, [utmSource, utmMedium, utmCampaign, utmTerm, utmContent]);
+
+  useEffect(() => {
+    integrationsApi.getAppsCount()
+      .then((res) => {
+        if (res.data?.count) {
+          setAppsCount(`${res.data.count}+`);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch apps count:", err));
+  }, []);
 
   if (loading) {
     return (
@@ -197,7 +209,7 @@ function LoginPageInner({ loading }: { loading: boolean }) {
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-          {[["2000+", "Integrations"], ["99.9%", "Uptime"], ["24/7", "Support"]].map(([val, label]) => (
+          {[[appsCount, "Integrations"], ["99.9%", "Uptime"], ["24/7", "Support"]].map(([val, label]) => (
             <div key={label} style={{ textAlign: "center", background: "rgb(248,249,251)", borderRadius: 10, padding: "10px 6px", border: "1px solid rgb(226,232,240)" }}>
               <div style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 15, color: "rgb(10,10,10)" }}>{val}</div>
               <div style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 10, color: "rgb(148,163,184)", letterSpacing: "0.05em", marginTop: 2 }}>{label.toUpperCase()}</div>
