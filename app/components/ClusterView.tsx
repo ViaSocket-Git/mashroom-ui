@@ -20,6 +20,7 @@ interface AiClient {
   id: string;
   title: string;
   icon: string;
+  color: string;
 }
 
 interface Cluster {
@@ -40,7 +41,7 @@ interface ClusterViewProps {
   hideSidebar?: boolean;
 }
 
-function ToolCards({ clusterId, onOpenPanel, onToolClick }: { clusterId: string; onOpenPanel: () => void; onToolClick: (flowId: string) => void }) {
+function ToolCards({ clusterId, onOpenPanel, onToolClick, newToolIds = [] }: { clusterId: string; onOpenPanel: () => void; onToolClick: (flowId: string) => void; newToolIds?: string[] }) {
   const dispatch = useAppDispatch();
   const tools = useAppSelector((s) => s.tools.byMcpServerId[clusterId] ?? []);
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[clusterId] ?? null);
@@ -57,35 +58,45 @@ function ToolCards({ clusterId, onOpenPanel, onToolClick }: { clusterId: string;
 
   return (
     <>
-      {tools.map((tool) => (
-        <div
-          key={tool.flowId}
-          className="relative overflow-hidden group/card"
-          style={{ background: "rgb(255,255,255)", border: "1px solid rgb(203,213,225)", transition: "box-shadow 0.2s, border-color 0.2s", borderRadius: 4, boxShadow: "rgba(0,0,0,0.06) 0px 2px 8px, rgba(0,0,0,0.03) 0px 0px 0px 1px" }}
-        >
-          <button onClick={() => handleToolClick(tool)} className="w-full flex items-center gap-2.5 px-3 py-3 cursor-pointer border-0 text-left" style={{ background: "transparent" }}>
-            <div className="flex items-center shrink-0" style={{ gap: 2 }}>
-              {tool.serviceIcons && tool.serviceIcons.length > 0 ? (
-                tool.serviceIcons.map((icon, i) => (
-                  <div key={i} className="w-7 h-7 flex items-center justify-center" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", marginLeft: i > 0 ? -6 : 0, zIndex: tool.serviceIcons.length - i }}>
-                    <img src={icon} alt="" style={{ width: 16, height: 16, objectFit: "contain" }} />
+      {tools.map((tool) => {
+        const isNew = newToolIds.includes(tool.flowId);
+        return (
+          <div
+            key={tool.flowId}
+            className={`relative overflow-hidden group/card ${isNew ? "animate-added-glow" : ""}`}
+            style={{
+              background: "rgb(255,255,255)",
+              border: isNew ? "1px solid rgb(34,197,94)" : "1px solid rgb(203,213,225)",
+              transition: "box-shadow 0.2s, border-color 0.2s",
+              borderRadius: 4,
+              boxShadow: isNew ? "0 0 12px rgba(34,197,94,0.3)" : "rgba(0,0,0,0.06) 0px 2px 8px, rgba(0,0,0,0.03) 0px 0px 0px 1px",
+              animation: isNew ? "tool-added-scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)" : "none"
+            }}
+          >
+            <button onClick={() => handleToolClick(tool)} className="w-full flex items-center gap-2.5 px-3 py-3 cursor-pointer border-0 text-left" style={{ background: "transparent" }}>
+              <div className="flex items-center shrink-0" style={{ gap: 2 }}>
+                {tool.serviceIcons && tool.serviceIcons.length > 0 ? (
+                  tool.serviceIcons.map((icon, i) => (
+                    <div key={i} className="w-7 h-7 flex items-center justify-center" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", marginLeft: i > 0 ? -6 : 0, zIndex: tool.serviceIcons.length - i }}>
+                      <img src={icon} alt="" style={{ width: 16, height: 16, objectFit: "contain" }} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="w-7 h-7 flex items-center justify-center shrink-0" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>
+                    <Zap width={15} height={15} style={{ color: "rgb(100,116,139)" }} />
                   </div>
-                ))
-              ) : (
-                <div className="w-7 h-7 flex items-center justify-center shrink-0" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>
-                  <Zap width={15} height={15} style={{ color: "rgb(100,116,139)" }} />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0 flex items-center gap-1.5">
-              <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>{tool.name}</p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ChevronRight width={11} height={11} strokeWidth={2.5} className="group-hover/card:text-[#64748b] group-hover/card:translate-x-0.5" style={{ color: "rgb(176,184,196)", transition: "color 0.15s, transform 0.15s" }} />
-            </div>
-          </button>
-        </div>
-      ))}
+                )}
+              </div>
+              <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>{tool.name}</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ChevronRight width={11} height={11} strokeWidth={2.5} className="group-hover/card:text-[#64748b] group-hover/card:translate-x-0.5" style={{ color: "rgb(176,184,196)", transition: "color 0.15s, transform 0.15s" }} />
+              </div>
+            </button>
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -187,7 +198,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
         {/* Modal header */}
         <div className="flex items-center justify-between px-7 pt-6 pb-5" style={{ borderBottom: "1px solid rgb(235,237,242)" }}>
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 flex items-center justify-center rounded-xl shrink-0 overflow-hidden" style={{ background: selectedClient?.icon ? "transparent" : "rgb(252,241,236)" }}>
+            <div className="w-11 h-11 flex items-center justify-center rounded-xl shrink-0 overflow-hidden" style={{ background: selectedClient?.color ? `${selectedClient.color}1A` : "rgb(252,241,236)" }}>
               {selectedClient?.icon ? (
                 <img src={selectedClient.icon} alt={selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
               ) : (
@@ -326,7 +337,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
 
   const steps = [
     { num: 1, title: "Add your power-ups", desc: "Pick apps and the specific actions your AI can perform." },
-    { num: 2, title: "Copy the config below", desc: "Paste it into your AI client's settings file." },
+    { num: 2, title: "Copy the url/config", desc: "Paste it into your AI client's settings file." },
     { num: 3, title: "Ask your AI to act", desc: "Then just ask in plain language.", quote: "\"Send a Slack message to the team about tomorrow's standup\"" },
   ];
 
@@ -336,7 +347,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
       <div
         onClick={() => setExpanded(v => !v)}
         className="shrink-0 flex items-center px-5 w-full cursor-pointer"
-        style={{ height: 57, background: "rgb(217,119,87)", borderBottom: expanded ? "1px solid rgba(0,0,0,0.12)" : "none" }}
+        style={{ height: 40, background: selectedClient?.color || cluster.clientColor || "rgb(217,119,87)", borderBottom: expanded ? "1px solid rgba(0,0,0,0.12)" : "none" }}
       >
         <span style={{ fontFamily: "Geist, sans-serif", fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", flex: 1 }}>
           {selectedClient?.title ?? cluster.client} Configuration
@@ -364,7 +375,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
             <CopyButton text={mcpUrl} label="Copy" />
           </div>
           <div className="flex items-start gap-1" style={{ marginTop: 6, marginBottom: 12 }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgb(217,119,6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgb(217,119,6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
             <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(146,64,14)", lineHeight: 1.45 }}>Keep this URL private — it authorizes AI actions on your connected accounts.</span>
           </div>
           <div style={{ height: 1, background: "rgb(226,232,240)", marginBottom: 12 }} />
@@ -374,10 +385,11 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
               <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, color: "rgb(107,114,128)", letterSpacing: "0.04em" }}>JSON</span>
               <CopyButton text={configJson} label="Copy" />
             </div>
-            <pre style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, margin: 0, padding: "10px 14px", lineHeight: 1.65, overflowX: "auto", color: "rgb(229,231,235)" }} dangerouslySetInnerHTML={{ __html: configJson
-              .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-              .replace(/("[^"]+")(:)/g, '<span style="color:rgb(96,165,250)">$1</span>$2')
-              .replace(/: ("[^"]+")/g, ': <span style="color:rgb(52,211,153)">$1</span>')
+            <pre style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, margin: 0, padding: "10px 14px", lineHeight: 1.65, overflowX: "auto", color: "rgb(229,231,235)" }} dangerouslySetInnerHTML={{
+              __html: configJson
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/("[^"]+")(:)/g, '<span style="color:rgb(96,165,250)">$1</span>$2')
+                .replace(/: ("[^"]+")/g, ': <span style="color:rgb(52,211,153)">$1</span>')
             }} />
           </div>
         </div>
@@ -385,33 +397,29 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
         {/* Right 40%: How to connect */}
         <div className="flex flex-col overflow-y-auto" style={{ flex: "0 0 40%", padding: "14px 20px 16px" }}>
           <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, display: "block" }}>How to connect</span>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
-            {/* Vertical connector line */}
-            <div style={{ position: "absolute", left: 10, top: 22, bottom: 52, width: 1.5, background: "rgb(226,232,240)", borderRadius: 2 }} />
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, gap: 24 }}>
             {steps.map((step, i) => (
               <div key={step.num} className="flex gap-3 items-start" style={{ position: "relative" }}>
-                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgb(10,10,10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 1 }}>
-                  <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, fontWeight: 700, color: "#fff" }}>{step.num}</span>
+                {/* Step circle + segment */}
+                <div className="flex flex-col items-center shrink-0" style={{ position: "relative", width: 22 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgb(10,10,10)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+                    <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, fontWeight: 700, color: "#fff" }}>{step.num}</span>
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div style={{ position: "absolute", left: 10.25, top: 22, bottom: -24, width: 1.5, background: "rgb(226,232,240)", borderRadius: 2 }} />
+                  )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600, color: "rgb(10,10,10)", margin: "0 0 3px", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{step.title}</p>
                   <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", margin: 0, lineHeight: 1.5 }}>{step.desc}</p>
                   {step.quote && (
-                    <div style={{ borderLeft: "2px solid rgb(226,232,240)", paddingLeft: 9, marginTop: 8 }}>
+                    <div style={{ paddingLeft: 9, marginTop: 8 }}>
                       <em style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", lineHeight: 1.5 }}>{step.quote}</em>
                     </div>
                   )}
                 </div>
               </div>
             ))}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-              <button
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 500, color: "rgb(37,99,235)", letterSpacing: "-0.01em" }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                Watch a walkthrough
-              </button>
-            </div>
           </div>
         </div>
       </div>}
@@ -425,6 +433,8 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   const [showPanel, setShowPanel] = useState(false);
   const [pendingFlowId, setPendingFlowId] = useState<string | null>(null);
   const [showAccount, setShowAccount] = useState(false);
+  const [newToolIds, setNewToolIds] = useState<string[]>([]);
+  const [celebratingTool, setCelebratingTool] = useState<{ id: string; name: string; icon: string } | null>(null);
 
   function handleToolClick(flowId: string) {
     setPendingFlowId(flowId);
@@ -476,11 +486,35 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             status: (e.data.action as string) ?? (e.data.status as string) ?? "active",
             title: (e.data.title as string) ?? "",
             mcpServerId: cluster.id,
-                      });
-          if (res.data?.data) dispatch(upsertTool({
-            ...res.data.data,
-            serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],
-          }));
+          });
+          if (res.data?.data) {
+            dispatch(upsertTool({
+              ...res.data.data,
+              serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],
+            }));
+            // Close the modal if it was a create/publish action
+            if (action === "published" || action === "created") {
+              const toolId = (e.data.id as string) ?? "";
+              const toolName = (e.data.title as string) ?? (e.data.id as string) ?? "Power-up";
+              const toolIcon = (e.data.serviceIcons as string[])?.[0] ?? "";
+              setShowPanel(false);
+              setPendingFlowId(null);
+
+              // 1. Show Big Icon Pop in the grid panel
+              setCelebratingTool({ id: toolId, name: toolName, icon: toolIcon });
+
+              // 2. Transition to grid card (Faster - 1s total)
+              setTimeout(() => {
+                setCelebratingTool(null);
+                if (toolId) {
+                  setNewToolIds((prev) => [...prev, toolId]);
+                  setTimeout(() => {
+                    setNewToolIds((prev) => prev.filter((id) => id !== toolId));
+                  }, 2500);
+                }
+              }, 1000);
+            }
+          }
         } catch (err) {
           console.error("[ClusterView] MCP tool API error:", err);
         }
@@ -493,14 +527,21 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   if (!toolsHasFetched) {
     return (
       <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
-        <style>{`@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }`}</style>
+        <style>{`
+          @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+          @keyframes tool-added-scale { 0%{transform:scale(0.8);opacity:0} 70%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
+          @keyframes added-glow { 0%{box-shadow:0 0 0 rgba(34,197,94,0)} 50%{box-shadow:0 0 20px rgba(34,197,94,0.4)} 100%{box-shadow:0 0 0 rgba(34,197,94,0)} }
+          @keyframes tool-added-header { 0%{transform:scale(0.9);opacity:0} 15%{transform:scale(1);opacity:1} 85%{transform:scale(1);opacity:1} 100%{transform:scale(0.95);opacity:0} }
+          @keyframes celebration-pop { 0%{transform:scale(0.6);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+          @keyframes celebration-fade-out { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.15)} }
+        `}</style>
         {/* Header skeleton */}
-        <div className="shrink-0 px-6 flex items-center justify-between" style={{ height: 64, background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
+        <div className="shrink-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full flex items-center justify-between border-b" style={{ height: 64, background: "rgb(255,255,255)", borderBottom: "1px solid rgb(226,232,240)" }}>
           <div style={{ width: 160, height: 20, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
         </div>
         {/* Content skeleton */}
-        <div className="flex-1 min-h-0 px-6 pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
+        <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
           {/* Power Ups panel skeleton */}
           <div className="flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8 }}>
             {/* Panel header */}
@@ -528,7 +569,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
       {/* Header */}
       <div className="shrink-0">
         {hideSidebar ? (
-          <div className="px-5 flex items-center justify-between border-b" style={{ borderColor: "rgb(226,232,240)", background: "rgb(255,255,255)" }}>
+          <div className="px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full flex items-center justify-between border-b" style={{ borderColor: "rgb(226,232,240)", background: "rgb(255,255,255)" }}>
             <a className="flex items-center gap-2.5 no-underline h-16" href="/">
               <div className="w-8 h-8 flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -560,7 +601,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             </div>
           </div>
         ) : (
-          <div className="w-full px-6" style={{ background: "transparent" }}>
+          <div className="w-full px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto" style={{ background: "transparent" }}>
             <div className="flex items-center justify-between h-16 w-full">
               <div className="flex items-center gap-2.5">
                 {cluster.selectedClient?.icon ? (
@@ -590,22 +631,47 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
       </div>
 
       {/* Content — stacked full width */}
-      <div className="flex-1 min-h-0 px-6 pt-4 flex flex-col gap-2 h-full overflow-hidden">
+      <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 flex flex-col gap-2 h-full overflow-hidden">
 
         {/* Power Ups */}
         <div className="w-full flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
           {/* Header */}
-          <div className="shrink-0 flex items-center px-4" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
-            <span style={{ fontFamily: "Geist, sans-serif", fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Power Ups</span>
+          <div className="shrink-0 flex items-center justify-between px-4" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
+            <div className="flex items-center gap-3">
+              <span style={{ fontFamily: "Geist, sans-serif", fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Power Ups</span>
+            </div>
           </div>
-
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col" style={{ minHeight: 0 }}>
+          <div className="flex-1 min-h-0 relative overflow-y-auto flex flex-col" style={{ minHeight: 0 }}>
+            {/* Celebration Overlay (Grid-Focused) */}
+            {celebratingTool && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center p-6 bg-white/45 backdrop-blur-[4px] animate-[celebration-fade-out_0.35s_ease-in_0.75s_forwards]">
+                <div className="flex flex-col items-center gap-6 animate-[celebration-pop_0.45s_cubic-bezier(0.34,1.56,0.64,1)_both]">
+                  <div className="relative">
+                    <div className="absolute -inset-4 bg-green-400/20 blur-xl rounded-full animate-pulse" />
+                    <div className="relative w-24 h-24 flex items-center justify-center bg-white rounded-2xl border-[2px] border-green-200 shadow-[0_15px_35px_rgba(0,0,0,0.1)] p-3">
+                      {celebratingTool.icon ? (
+                        <img src={celebratingTool.icon} alt={celebratingTool.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Zap width={40} height={40} style={{ color: "rgb(34,197,94)" }} />
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-lg">
+                      <Check width={12} height={12} strokeWidth={4} style={{ color: "white" }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span style={{ fontFamily: "Geist, sans-serif", fontSize: 11, fontWeight: 700, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.05em" }}>READY TO POWER UP</span>
+                    <h3 style={{ fontFamily: "Geist, sans-serif", fontSize: 24, fontWeight: 800, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.03em" }}>{celebratingTool.name}</h3>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Has tools */}
             {toolsHasFetched && tools.length > 0 && (
               <div className="px-3 pt-3 pb-3">
                 <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                  <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} onToolClick={handleToolClick} />
+                  <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} onToolClick={handleToolClick} newToolIds={newToolIds} />
                   <button
                     onClick={() => setShowPanel(true)}
                     className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
@@ -648,15 +714,15 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
                   <div className="flex items-center gap-1.5">
                     {/* Gmail */}
                     <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 6.5V18a1.5 1.5 0 001.5 1.5H5V8.8l7 5.25 7-5.25V19.5h1.5A1.5 1.5 0 0022 18V6.5a2 2 0 00-3.18-1.61L12 10.2 5.18 4.89A2 2 0 002 6.5z" fill="#EA4335"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 6.5V18a1.5 1.5 0 001.5 1.5H5V8.8l7 5.25 7-5.25V19.5h1.5A1.5 1.5 0 0022 18V6.5a2 2 0 00-3.18-1.61L12 10.2 5.18 4.89A2 2 0 002 6.5z" fill="#EA4335" /></svg>
                     </div>
                     {/* Notion */}
                     <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326l-2.197-1.586c-.42-.326-.98-.7-2.054-.606L3.01 2.882c-.467.047-.56.28-.374.466l1.823 1.86z" fill="#000"/><path d="M5.252 7.012v12.57c0 .653.326.933.98.886l14.57-.84c.654-.046.746-.466.746-1.026V6.172c0-.56-.233-.84-.7-.793l-15.223.886c-.514.047-.373.234-.373.747z" fill="#fff" stroke="#000" strokeWidth="0.5"/><path d="M14.86 8.384c.094.42 0 .84-.42.886l-.654.14v9.278c-.56.28-1.12.42-1.493.42-.7 0-.886-.233-1.4-.886l-4.29-6.74v6.507l1.353.28s0 .84-1.12.84l-3.12.186c-.093-.186 0-.653.327-.746l.84-.234V9.69l-1.166-.093c-.094-.42.14-1.026.793-1.073l3.353-.233 4.478 6.834V9.037l-1.12-.14c-.094-.513.28-.886.746-.933l3.493-.233z" fill="#000"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326l-2.197-1.586c-.42-.326-.98-.7-2.054-.606L3.01 2.882c-.467.047-.56.28-.374.466l1.823 1.86z" fill="#000" /><path d="M5.252 7.012v12.57c0 .653.326.933.98.886l14.57-.84c.654-.046.746-.466.746-1.026V6.172c0-.56-.233-.84-.7-.793l-15.223.886c-.514.047-.373.234-.373.747z" fill="#fff" stroke="#000" strokeWidth="0.5" /><path d="M14.86 8.384c.094.42 0 .84-.42.886l-.654.14v9.278c-.56.28-1.12.42-1.493.42-.7 0-.886-.233-1.4-.886l-4.29-6.74v6.507l1.353.28s0 .84-1.12.84l-3.12.186c-.093-.186 0-.653.327-.746l.84-.234V9.69l-1.166-.093c-.094-.42.14-1.026.793-1.073l3.353-.233 4.478 6.834V9.037l-1.12-.14c-.094-.513.28-.886.746-.933l3.493-.233z" fill="#000" /></svg>
                     </div>
                     {/* Slack */}
                     <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.166a2.125 2.125 0 1 1-2.125-2.125h2.125v2.125zm1.063 0a2.125 2.125 0 1 1 4.25 0v5.292a2.125 2.125 0 1 1-4.25 0v-5.292z" fill="#E01E5A"/><path d="M8.855 5.042a2.125 2.125 0 1 1 2.125-2.125v2.125H8.855zm0 1.063a2.125 2.125 0 1 1 0 4.25H3.542a2.125 2.125 0 1 1 0-4.25h5.313z" fill="#36C5F0"/><path d="M18.958 8.855a2.125 2.125 0 1 1 2.125 2.125h-2.125V8.855zm-1.063 0a2.125 2.125 0 1 1-4.25 0V3.542a2.125 2.125 0 1 1 4.25 0v5.313z" fill="#2EB67D"/><path d="M15.145 18.958a2.125 2.125 0 1 1-2.125 2.125v-2.125h2.125zm0-1.063a2.125 2.125 0 1 1 0-4.25h5.313a2.125 2.125 0 1 1 0 4.25h-5.313z" fill="#ECB22E"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.166a2.125 2.125 0 1 1-2.125-2.125h2.125v2.125zm1.063 0a2.125 2.125 0 1 1 4.25 0v5.292a2.125 2.125 0 1 1-4.25 0v-5.292z" fill="#E01E5A" /><path d="M8.855 5.042a2.125 2.125 0 1 1 2.125-2.125v2.125H8.855zm0 1.063a2.125 2.125 0 1 1 0 4.25H3.542a2.125 2.125 0 1 1 0-4.25h5.313z" fill="#36C5F0" /><path d="M18.958 8.855a2.125 2.125 0 1 1 2.125 2.125h-2.125V8.855zm-1.063 0a2.125 2.125 0 1 1-4.25 0V3.542a2.125 2.125 0 1 1 4.25 0v5.313z" fill="#2EB67D" /><path d="M15.145 18.958a2.125 2.125 0 1 1-2.125 2.125v-2.125h2.125zm0-1.063a2.125 2.125 0 1 1 0-4.25h5.313a2.125 2.125 0 1 1 0 4.25h-5.313z" fill="#ECB22E" /></svg>
                     </div>
                     <Plus width={18} height={18} strokeWidth={3} style={{ color: "rgb(46,168,126)" }} />
                   </div>

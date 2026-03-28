@@ -238,7 +238,7 @@ export default function Sidebar({
         <div
           className="px-4 py-3 cursor-pointer"
           style={{ background: "rgb(248,249,251)", border: "1px solid rgb(226,232,240)" }}
-          onClick={() => router.push("/embed")}
+          onClick={() => window.open("https://viasocket.com/embed", "_blank")}
         >
           <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, color: "rgb(10,10,10)", margin: 0 }}>Explore Embed</p>
           <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(100,116,139)", margin: "2px 0 6px" }}>Built for AI startups, agents &amp; companies shipping AI products</p>

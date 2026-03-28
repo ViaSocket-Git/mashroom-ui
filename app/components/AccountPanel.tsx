@@ -19,10 +19,10 @@ export default function AccountPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed z-50 flex flex-col"
+      className="absolute z-50 flex flex-col"
       style={{
-        top: 12,
-        right: 12,
+        top: "calc(100% + 10px)",
+        right: 0,
         width: 260,
         background: "#fff",
         border: "1px solid rgb(226,232,240)",
@@ -45,18 +45,6 @@ export default function AccountPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Menu items */}
-      <div className="px-2 py-2 flex flex-col gap-0.5">
-        <button
-          className="flex items-center gap-2.5 px-3 py-2 w-full cursor-pointer text-left rounded"
-          style={{ background: "transparent", border: "none", color: "rgb(30,30,30)", fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 500 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgb(243,244,246)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-        >
-          <LifeBuoy width={14} height={14} strokeWidth={2} />
-          Support
-        </button>
-      </div>
-
       <div className="px-2 pb-2 border-t" style={{ borderColor: "rgb(243,244,246)", paddingTop: 6 }}>
         <button
           onClick={handleLogout}

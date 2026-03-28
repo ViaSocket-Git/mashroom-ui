@@ -83,12 +83,22 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                   onClick={() => setSelectedClient(isSelected ? null : client)}
                   className="flex items-center gap-4 px-5 text-left cursor-pointer transition-all w-full"
                   style={{
-                    background: isSelected ? "rgb(255,245,242)" : "rgba(0,0,0,0)",
-                    border: isSelected ? "1.5px solid rgb(220,160,140)" : "1px solid rgb(238,239,242)",
+                    background: isSelected ? `${client.color}0D` : "rgba(0,0,0,0)",
+                    border: isSelected ? `1.5px solid ${client.color}CC` : "1px solid rgb(238,239,242)",
                     borderRadius: 4, boxShadow: "none", minHeight: 60, paddingTop: 14, paddingBottom: 14
                   }}
-                  onMouseEnter={(e) => { if (!isSelected) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(196,201,212)"; (e.currentTarget as HTMLButtonElement).style.background = "rgb(248,250,252)"; }}}
-                  onMouseLeave={(e) => { if (!isSelected) { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(238,239,242)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0)"; }}}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(196,201,212)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgb(248,250,252)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "rgb(238,239,242)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0)";
+                    }
+                  }}
                 >
                   <div style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <img
