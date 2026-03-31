@@ -10,6 +10,43 @@ import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
+
+interface ReplacedField {
+  type: string
+  required: boolean
+  key: string
+}
+
+type ReplacedValue<T> = T extends unknown[]
+  ? ReplacedValue<T[number]>[]
+  : T extends Record<string, unknown>
+    ? { [K in keyof T]: T[K] extends 'your_value_here' ? ReplacedField : ReplacedValue<T[K]> }
+    : T
+
+function replaceYourValueHere<T>(obj: T): ReplacedValue<T> {
+  if (Array.isArray(obj)) {
+    return obj.map(replaceYourValueHere) as ReplacedValue<T>
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const newObj: Record<string, unknown> = {}
+    Object.keys(obj).forEach((key) => {
+      const value = (obj as Record<string, unknown>)[key]
+      if (value === 'your_value_here') {
+        newObj[key] = {
+          type: 'string',
+          required: true,
+          key
+        } satisfies ReplacedField
+      } else {
+        newObj[key] = replaceYourValueHere(value)
+      }
+    })
+    return newObj as ReplacedValue<T>
+  }
+  return obj as ReplacedValue<T>
+}
+
+
 interface PowerUp {
   id: string;
   name: string;
@@ -479,9 +516,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
         }
       } else if (action === "published" || action === "paused" || action === "created" || action === "updated") {
         try {
+          const convertedpayload = replaceYourValueHere(e.data?.payload || {})
           const res = await toolApi.callTool({
             flowId: (e.data.id as string) ?? "",
-            payload: { body: {} },
+            payload: {
+              query: convertedpayload?.query,
+              body: Object.assign(convertedpayload?.body || {}, e.data?.detailedUsedVariables?.body || {})
+            },
             desc: (e.data.description as string) || (e.data.title as string) || "",
             status: (e.data.action as string) ?? (e.data.status as string) ?? "active",
             title: (e.data.title as string) ?? "",
