@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, ArrowRight, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { deleteCluster, removeCluster } from "@/lib/features/clustersSlice";
 
 interface AiClient {
   id: string;
@@ -25,6 +26,7 @@ interface SidebarProps {
   onSelectCluster: (id: string) => void;
   onNewCluster: () => void;
   onChangeClient: (clusterId: string) => void;
+  onDeleteCluster?: (clusterId: string) => void;
 }
 
 function ClusterIcon({ cluster, active }: { cluster: Cluster; active: boolean }) {
@@ -70,11 +72,14 @@ export default function Sidebar({
   onSelectCluster,
   onNewCluster,
   onChangeClient,
+  onDeleteCluster,
 }: SidebarProps) {
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const clustersLoading = useAppSelector((s) => s.clusters.loading);
   const [wasLoading, setWasLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(clusters.length > 0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -224,6 +229,29 @@ export default function Sidebar({
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                       Change AI Client
+                    </button>
+                    <div style={{ height: 1, background: "rgb(226,232,240)", margin: "2px 0" }} />
+                    <button
+                      disabled={deletingId === cluster.id}
+                      onClick={async () => {
+                        setOpenMenuId(null);
+                        setDeletingId(cluster.id);
+                        await dispatch(deleteCluster({ mcpServerId: cluster.id, name: cluster.name, client: cluster.client }));
+                        dispatch(removeCluster(cluster.id));
+                        const remaining = clusters.filter((c) => c.id !== cluster.id);
+                        if (remaining.length > 0) {
+                          const next = remaining[0].id;
+                          onSelectCluster(next);
+                          router.push(`/cluster/${next}`);
+                        }
+                        setDeletingId(null);
+                        if (onDeleteCluster) onDeleteCluster(cluster.id);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 cursor-pointer text-left"
+                      style={{ background: "transparent", border: "none", fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: deletingId === cluster.id ? "rgb(148,163,184)" : "rgb(220,38,38)", fontWeight: 500 }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      {deletingId === cluster.id ? "Deleting…" : "Delete Cluster"}
                     </button>
                   </div>
                 )}

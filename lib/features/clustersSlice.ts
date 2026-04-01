@@ -123,6 +123,18 @@ export const updateClusterOnServer = createAsyncThunk(
   }
 );
 
+export const deleteCluster = createAsyncThunk(
+  "clusters/deleteCluster",
+  async (payload: { mcpServerId: string; name: string; client: string }, { rejectWithValue }) => {
+    try {
+      await mcpApi.deleteCluster(payload.mcpServerId, payload.name, payload.client);
+      return payload.mcpServerId;
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
+    }
+  }
+);
+
 const clustersSlice = createSlice({
   name: "clusters",
   initialState,
@@ -162,6 +174,12 @@ const clustersSlice = createSlice({
     },
     clearError(state) {
       state.error = null;
+    },
+    removeCluster(state, action: PayloadAction<string>) {
+      state.clusters = state.clusters.filter((c) => c.id !== action.payload);
+      if (state.activeClusterId === action.payload) {
+        state.activeClusterId = state.clusters[0]?.id ?? null;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -261,7 +279,7 @@ const clustersSlice = createSlice({
   },
 });
 
-export const { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, clearError } =
+export const { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, clearError, removeCluster } =
   clustersSlice.actions;
 
 
