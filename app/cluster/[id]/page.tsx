@@ -5,7 +5,7 @@ export const runtime = "edge";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, fetchClusters, fetchEmbedToken, updateClusterOnServer, fetchCurrentUser } from "@/lib/features/clustersSlice";
+import { updateClusterClient, addPowerUp, setClusterSelectedClient, fetchClusters, fetchEmbedToken, updateClusterOnServer, fetchCurrentUser } from "@/lib/features/clustersSlice";
 import { fetchAiClients, type AiClient } from "@/lib/features/aiClientsSlice";
 import { fetchTools } from "@/lib/features/toolsSlice";
 import ClusterView from "@/app/components/ClusterView";
@@ -38,17 +38,10 @@ export default function ClusterPage() {
   const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
 
   const clusters = useAppSelector((s) => s.clusters.clusters);
-  const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
   const tools = useAppSelector((s) => s.tools.byMcpServerId[id] ?? []);
   const hideSidebar = clusters.length === 1 && tools.length === 0;
 
   const cluster = clusters.find((c) => c.id === id) ?? null;
-
-  useEffect(() => {
-    if (id && id !== activeClusterId) {
-      dispatch(setActiveCluster(id));
-    }
-  }, [id, activeClusterId, dispatch]);
 
   useEffect(() => {
     if (!id || !cluster) return;
@@ -138,7 +131,6 @@ export default function ClusterPage() {
           clusters={clusters}
           activeClusterId={id}
           onSelectCluster={(clusterId) => {
-            dispatch(setActiveCluster(clusterId));
             router.push(`/cluster/${clusterId}`);
           }}
           onNewCluster={handleNewCluster}

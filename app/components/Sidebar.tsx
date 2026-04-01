@@ -94,7 +94,7 @@ export default function Sidebar({
   }, [openMenuId]);
 
   useEffect(() => {
-    if (clusters.length > 0) { setHasFetched(true); return; }
+    if (clusters) { setHasFetched(true); return; }
     if (clustersLoading) setWasLoading(true);
     if (!clustersLoading && wasLoading) setHasFetched(true);
   }, [clustersLoading, wasLoading, clusters.length]);
@@ -243,6 +243,10 @@ export default function Sidebar({
                           const next = remaining[0].id;
                           onSelectCluster(next);
                           router.push(`/cluster/${next}`);
+                        }
+                        else{
+                          router.push(`/dashboard`);
+
                         }
                         setDeletingId(null);
                         if (onDeleteCluster) onDeleteCluster(cluster.id);

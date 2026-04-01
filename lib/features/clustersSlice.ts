@@ -27,7 +27,6 @@ export interface Cluster {
 
 interface ClustersState {
   clusters: Cluster[];
-  activeClusterId: string | null;
   loading: boolean;
   clustersFetched: boolean;
   error: string | null;
@@ -42,7 +41,6 @@ let clusterCounter = 1;
 
 const initialState: ClustersState = {
   clusters: [],
-  activeClusterId: null,
   loading: false,
   clustersFetched: false,
   error: null,
@@ -103,7 +101,12 @@ export const createCluster = createAsyncThunk(
     try {
       const state = getState() as { clusters: ClustersState };
       const userId = state.clusters.userId ?? "";
-      const res = await mcpApi.createCluster(userId, "", payload.client);
+      const maxNum = state.clusters.clusters.reduce((max, c) => {
+        const match = c.name.match(/^Cluster (\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const name = `Cluster ${maxNum + 1}`;
+      const res = await mcpApi.createCluster(userId, name, payload.client);
       return { ...payload, apiCluster: res.data.data as ApiCluster };
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
@@ -139,9 +142,6 @@ const clustersSlice = createSlice({
   name: "clusters",
   initialState,
   reducers: {
-    setActiveCluster(state, action: PayloadAction<string>) {
-      state.activeClusterId = action.payload;
-    },
     updateClusterClient(
       state,
       action: PayloadAction<{ clusterId: string; client: string; clientColor: string }>
@@ -177,9 +177,6 @@ const clustersSlice = createSlice({
     },
     removeCluster(state, action: PayloadAction<string>) {
       state.clusters = state.clusters.filter((c) => c.id !== action.payload);
-      if (state.activeClusterId === action.payload) {
-        state.activeClusterId = state.clusters[0]?.id ?? null;
-      }
     },
   },
   extraReducers: (builder) => {
@@ -213,9 +210,6 @@ const clustersSlice = createSlice({
           };
         });
         clusterCounter = clusters.length + 1;
-        if (state.clusters.length > 0 && !state.activeClusterId) {
-          state.activeClusterId = state.clusters[0].id;
-        }
       })
       .addCase(fetchClusters.rejected, (state, action) => {
         state.loading = false;
@@ -244,7 +238,6 @@ const clustersSlice = createSlice({
           selectedClient: action.payload.selectedClient,
         };
         state.clusters.push(newCluster);
-        state.activeClusterId = apiId;
         state.selectedClientByClusterId[apiId] = action.payload.selectedClient;
       })
       .addCase(fetchEmbedToken.fulfilled, (state, action) => {
@@ -274,12 +267,11 @@ const clustersSlice = createSlice({
           selectedClient: action.meta.arg.selectedClient,
         };
         state.clusters.push(newCluster);
-        state.activeClusterId = newId;
       });
   },
 });
 
-export const { setActiveCluster, updateClusterClient, addPowerUp, setClusterSelectedClient, clearError, removeCluster } =
+export const { updateClusterClient, addPowerUp, setClusterSelectedClient, clearError, removeCluster } =
   clustersSlice.actions;
 
 

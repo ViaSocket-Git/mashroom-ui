@@ -567,7 +567,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
 
   if (!toolsHasFetched) {
     return (
-      <div className="flex h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
+      <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
         <style>{`
           @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
           @keyframes tool-added-scale { 0%{transform:scale(0.8);opacity:0} 70%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
@@ -576,29 +576,28 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
           @keyframes celebration-pop { 0%{transform:scale(0.6);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
           @keyframes celebration-fade-out { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.15)} }
         `}</style>
-          {/* Header skeleton */}
-          <div className="shrink-0 px-6 flex items-center justify-between border-b" style={{ height: 64, background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)" }}>
-            <div style={{ width: 160, height: 20, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-          </div>
-          {/* Content skeleton */}
-          <div className="flex-1 min-h-0 px-6 pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
-            {/* Power Ups panel skeleton */}
-            <div className="flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8 }}>
-              <div className="shrink-0 px-4 flex items-center" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
-                <div style={{ width: 100, height: 18, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-              </div>
-            {/* Tool cards skeleton */}
-              <div className="px-3 pt-3">
-                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} style={{ height: 58, borderRadius: 4, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
-                  ))}
-                </div>
+        {/* Header skeleton */}
+        <div className="shrink-0 px-6 flex items-center justify-between" style={{ height: 64, background: "transparent" }}>
+          <div style={{ width: 160, height: 20, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+        </div>
+        {/* Content skeleton */}
+        <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
+          {/* Power Ups panel skeleton */}
+          <div className="flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+            <div className="shrink-0 px-4 flex items-center" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
+              <div style={{ width: 100, height: 18, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+            </div>
+            <div className="px-3 pt-3">
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} style={{ height: 58, borderRadius: 4, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
+                ))}
               </div>
             </div>
-            {/* Config panel skeleton */}
-            <div className="shrink-0" style={{ height: 57, borderRadius: 8, background: "linear-gradient(90deg,rgb(217,119,87) 25%,rgb(224,140,110) 50%,rgb(217,119,87) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+          </div>
+          {/* Config panel skeleton */}
+          <div className="shrink-0" style={{ height: 57, borderRadius: 8, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", border: "1px solid rgb(226,232,240)" }} />
         </div>
       </div>
     );

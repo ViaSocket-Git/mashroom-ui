@@ -8,7 +8,6 @@ import ClusterView from "./ClusterView";
 import AIClientModal from "./AIClientModal";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  setActiveCluster,
   updateClusterClient,
   addPowerUp,
   createCluster,
@@ -52,7 +51,6 @@ export default function MashroomApp() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const clusters = useAppSelector((s) => s.clusters.clusters);
-  const activeClusterId = useAppSelector((s) => s.clusters.activeClusterId);
 
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -67,15 +65,13 @@ export default function MashroomApp() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (hasFetched && activeClusterId) {
-      router.push(`/cluster/${activeClusterId}`);
+    if (hasFetched && clusters.length > 0) {
+      router.push(`/cluster/${clusters[0].id}`);
     }
-  }, [hasFetched, activeClusterId]);
+  }, [hasFetched, clusters.length]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
-
-  const activeCluster = clusters.find((c) => c.id === activeClusterId) ?? null;
 
   function handleNewCluster() {
     setModalMode("newCluster");
@@ -90,7 +86,7 @@ export default function MashroomApp() {
   const [targetClusterId, setTargetClusterId] = useState<string | null>(null);
 
   function handleChangeClient(clusterId?: string) {
-    setTargetClusterId(clusterId ?? activeCluster?.id ?? null);
+    setTargetClusterId(clusterId ?? null);
     setModalMode("changeClient");
     setIsModalOpen(true);
   }
@@ -107,9 +103,9 @@ export default function MashroomApp() {
       dispatch(updateClusterClient({ clusterId: targetClusterId, client: client.title, clientColor }));
       dispatch(setClusterSelectedClient({ clusterId: targetClusterId, client }));
       dispatch(updateClusterOnServer({ mcpServerId: targetClusterId, name: target?.name ?? "", client: client.title }));
-    } else if (modalMode === "addPowerUp" && activeCluster) {
+    } else if (modalMode === "addPowerUp" && clusters.length > 0) {
       dispatch(addPowerUp({
-        clusterId: activeCluster.id,
+        clusterId: clusters[0].id,
         powerUp: {
           id: `pu-${Date.now()}`,
           name: `${client.title} Power-Up`,
@@ -152,12 +148,11 @@ export default function MashroomApp() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "rgb(248,249,251)" }}>
-      {clusters.length > 0 && (
+      {clusters.length>0 && (
         <Sidebar
           clusters={clusters}
-          activeClusterId={activeClusterId ?? ""}
+          activeClusterId={""}
           onSelectCluster={(id) => {
-            dispatch(setActiveCluster(id));
             router.push(`/cluster/${id}`);
           }}
           onNewCluster={handleNewCluster}
@@ -171,10 +166,7 @@ export default function MashroomApp() {
             Creating cluster…
           </div>
         )}
-        {activeCluster ? (
-          <ClusterView cluster={activeCluster} onAddPowerUp={handleAddPowerUp} onChangeClient={handleChangeClient} />
-        ) : (
-          <div className="flex flex-col h-full" style={{ background: "rgb(248,249,251)" }}>
+        <div className="flex flex-col h-full" style={{ background: "rgb(248,249,251)" }}>
             {/* Header */}
             <div className="shrink-0">
               <div className="w-full px-6" style={{ background: "transparent" }}>
@@ -249,7 +241,6 @@ export default function MashroomApp() {
             </div>
             </div>
           </div>
-        )}
       </main>
 
       <AIClientModal
