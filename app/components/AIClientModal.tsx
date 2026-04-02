@@ -14,6 +14,8 @@ interface AIClientModalProps {
 export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientModalProps) {
   const [search, setSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<AiClient | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requested, setRequested] = useState(false);
   const { clients, loading } = useAppSelector((s) => s.aiClients);
 
   const sorted = [...clients].sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
@@ -22,6 +24,25 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
   );
 
   if (!isOpen) return null;
+
+  const noResults = !loading && search.trim().length > 0 && filtered.length === 0;
+
+  async function handleRequestClient() {
+    if (requesting || requested) return;
+    setRequesting(true);
+    try {
+      await fetch("https://flow.sokt.io/func/scriTg56Y2oZ", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_name: search.trim() }),
+      });
+      setRequested(true);
+    } catch {
+      // silently ignore
+    } finally {
+      setRequesting(false);
+    }
+  }
 
   function handleDone() {
     if (selectedClient) {
@@ -73,6 +94,32 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
           {loading && clients.length === 0 ? (
             <div className="flex items-center justify-center h-32" style={{ color: "rgb(148,163,184)", fontFamily: "Geist, sans-serif", fontSize: 14 }}>
               Loading...
+            </div>
+          ) : noResults ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <p style={{ fontFamily: "Geist, sans-serif", fontSize: 15, fontWeight: 600, color: "rgb(10,10,10)", margin: 0 }}>
+                No results for &ldquo;{search}&rdquo;
+              </p>
+              <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: "rgb(100,116,139)", margin: 0 }}>
+                Can&apos;t find your AI client? Request it and we&apos;ll add it.
+              </p>
+              <button
+                data-testid="request-ai-client"
+                onClick={handleRequestClient}
+                disabled={requesting || requested}
+                style={{
+                  marginTop: 4,
+                  background: requested ? "rgb(240,253,244)" : "rgb(10,10,10)",
+                  color: requested ? "rgb(22,163,74)" : "#fff",
+                  border: requested ? "1px solid rgb(187,247,208)" : "none",
+                  borderRadius: 6, padding: "10px 22px",
+                  fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600,
+                  cursor: requesting || requested ? "default" : "pointer",
+                  transition: "background 0.15s, color 0.15s",
+                }}
+              >
+                {requested ? "Request sent!" : requesting ? "Sending…" : `Request "${search}"`}
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5">
