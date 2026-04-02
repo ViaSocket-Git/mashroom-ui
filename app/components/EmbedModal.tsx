@@ -92,6 +92,7 @@ export default function EmbedModal({ open, onClose, clusterId, pendingFlowId }: 
           {/* Close button — absolute right */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <button
+              data-testid="embed-modal-close"
               onClick={onClose}
               className="flex items-center gap-2 cursor-pointer"
               style={{ background: "transparent", color: "rgb(148,163,184)", border: "none", padding: 8, borderRadius: 4 }}

@@ -44,6 +44,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
             <p className="mt-1 text-sm" style={{ color: "rgb(100,116,139)", margin: "4px 0 0" }}>Select an AI client to continue</p>
           </div>
           <button
+            data-testid="ai-client-modal-close"
             onClick={onClose}
             className="flex items-center gap-2 cursor-pointer"
             style={{ background: "rgba(0,0,0,0)", color: "rgb(148,163,184)", border: "none", boxShadow: "none", padding: 8, borderRadius: 4 }}
@@ -79,6 +80,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                 const isSelected = selectedClient?.id === client.id;
                 return (
                 <button
+                  data-testid={`ai-client-option-${client.id}`}
                   key={client.id}
                   onClick={() => setSelectedClient(isSelected ? null : client)}
                   className="flex items-center gap-4 px-5 text-left cursor-pointer transition-all w-full"
@@ -129,6 +131,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
             {selectedClient ? `${selectedClient.title} selected` : "Select an AI client to continue"}
           </span>
           <button
+            data-testid="ai-client-modal-done"
             onClick={handleDone}
             disabled={!selectedClient}
             className="flex items-center gap-2 cursor-pointer"

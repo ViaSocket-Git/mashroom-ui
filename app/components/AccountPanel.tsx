@@ -47,6 +47,7 @@ export default function AccountPanel({ onClose }: { onClose: () => void }) {
       {/* Menu items */}
       <div className="px-2 pb-2 border-t" style={{ borderColor: "rgb(243,244,246)", paddingTop: 6 }}>
         <button
+          data-testid="account-sign-out"
           onClick={handleLogout}
           className="flex items-center gap-2.5 px-3 py-2 w-full cursor-pointer text-left rounded"
           style={{ background: "transparent", border: "none", color: "rgb(220,38,38)", fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 500 }}
