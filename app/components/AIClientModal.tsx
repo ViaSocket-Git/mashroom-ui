@@ -31,10 +31,10 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setSelectedClient(null); onClose(); }} />
       <div
-        className="relative w-full max-w-[720px] overflow-hidden flex flex-col z-10"
+        className="relative w-full max-w-[720px] overflow-hidden flex flex-col z-[9999999]"
         style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", boxShadow: "rgba(0,0,0,0.12) 0px 25px 50px, rgba(0,0,0,0.03) 0px 0px 0px 1px", height: "85vh", borderRadius: 4 }}
       >
         {/* Header */}
