@@ -2,7 +2,7 @@
 
 export const runtime = "edge";
 
-import React, { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { setInCookies } from "@/lib/utils/cookies";
 import WithAuth from "@/app/components/WithAuth";
@@ -10,62 +10,46 @@ import { integrationsApi } from "@/lib/api/integrationsApi";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
-function MushroomSVG({ size = 40, opacity = 0.1 }: { size?: number; opacity?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" style={{ opacity }}>
-      <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-      <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(30,30,30)" />
-      <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
-      <circle cx="18" cy="26" r="2.5" fill="white" opacity={0.6} />
-      <circle cx="32" cy="16" r="2.5" fill="white" opacity={0.6} />
-      <circle cx="46" cy="26" r="2.5" fill="white" opacity={0.6} />
-    </svg>
-  );
-}
+const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
 
-const MUSHROOMS = [
-  { size: 80, top: "5%", left: "4%", delay: "0s", duration: "7s", opacity: 0.08, rotate: -15 },
-  { size: 48, top: "12%", left: "18%", delay: "1.2s", duration: "9s", opacity: 0.06, rotate: 10 },
-  { size: 110, top: "3%", left: "78%", delay: "0.5s", duration: "8s", opacity: 0.07, rotate: 20 },
-  { size: 60, top: "18%", left: "90%", delay: "2s", duration: "6s", opacity: 0.09, rotate: -5 },
-  { size: 36, top: "38%", left: "2%", delay: "0.8s", duration: "10s", opacity: 0.05, rotate: 8 },
-  { size: 90, top: "55%", left: "8%", delay: "1.5s", duration: "7.5s", opacity: 0.08, rotate: -20 },
-  { size: 44, top: "70%", left: "20%", delay: "3s", duration: "8.5s", opacity: 0.06, rotate: 15 },
-  { size: 70, top: "80%", left: "5%", delay: "0.3s", duration: "9.5s", opacity: 0.07, rotate: -10 },
-  { size: 55, top: "88%", left: "35%", delay: "1.8s", duration: "7s", opacity: 0.05, rotate: 5 },
-  { size: 100, top: "75%", left: "82%", delay: "0.7s", duration: "8s", opacity: 0.08, rotate: -12 },
-  { size: 42, top: "60%", left: "94%", delay: "2.2s", duration: "6.5s", opacity: 0.06, rotate: 18 },
-  { size: 65, top: "90%", left: "70%", delay: "1s", duration: "9s", opacity: 0.07, rotate: -8 },
-  { size: 38, top: "45%", left: "85%", delay: "2.8s", duration: "7.5s", opacity: 0.05, rotate: 12 },
-  { size: 52, top: "30%", left: "96%", delay: "0.4s", duration: "8.5s", opacity: 0.07, rotate: -18 },
-  { size: 78, top: "48%", left: "50%", delay: "3.5s", duration: "11s", opacity: 0.04, rotate: 6 },
-];
-
-function FloatingMushrooms() {
+function StepCard({ step }: { step: { num: string; title: string; desc: string } }) {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-      {MUSHROOMS.map((m, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: m.top,
-            left: m.left,
-            transform: `rotate(${m.rotate}deg)`,
-            animation: `floatUp ${m.duration} ease-in-out infinite`,
-            animationDelay: m.delay,
-          }}
-        >
-          <MushroomSVG size={m.size} opacity={m.opacity} />
-        </div>
-      ))}
+    <div style={{
+      background: "rgba(0,0,0,0.18)",
+      borderRadius: 8,
+      padding: "18px 20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+    }}>
+      <div style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 32,
+        height: 32,
+        border: "2px solid rgba(255,255,255,0.55)",
+        borderRadius: 4,
+        fontFamily: PIXEL_FONT,
+        fontSize: 9,
+        color: "rgba(255,255,255,0.85)",
+        flexShrink: 0,
+      }}>
+        {step.num}
+      </div>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 15, color: "#fff", lineHeight: 1.3 }}>
+        {step.title}
+      </div>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.55 }}>
+        {step.desc}
+      </div>
     </div>
   );
 }
 
 function LoginPageInner({ loading }: { loading: boolean }) {
   const urlParams = useSearchParams();
-  const [appsCount, setAppsCount] = useState("1754+");
+  const [appsCount, setAppsCount] = useState("2,000+");
 
   const utmSource = urlParams.get("utm_source");
   const utmMedium = urlParams.get("utm_medium");
@@ -84,147 +68,167 @@ function LoginPageInner({ loading }: { loading: boolean }) {
   useEffect(() => {
     integrationsApi.getAppsCount()
       .then((res) => {
-        if (res.data?.count) {
-          setAppsCount(`${res.data.count}+`);
-        }
+        if (res.data?.count) setAppsCount(`${res.data.count}+`);
       })
-      .catch((err) => console.error("Failed to fetch apps count:", err));
+      .catch(() => {});
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: "rgb(250,250,250)" }}>
-        <FloatingMushrooms />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: "#f5f0eb" }}>
         <style>{`
           @keyframes mushroom-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
           @keyframes shadow-pulse { 0%,100%{transform:scaleX(1);opacity:.25} 50%{transform:scaleX(.6);opacity:.1} }
+          @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         `}</style>
-        <div style={{ zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
           <div style={{ animation: "mushroom-bob 1.2s ease-in-out infinite" }}>
-            <svg width="52" height="52" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
               <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
               <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="#1a1a1a" />
               <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="#0a0a0a" />
-              <path d="M29 42H35V56C35 57.1 34.1 58 33 58H31C29.9 58 29 57.1 29 56V42Z" fill="#1a1a1a" opacity="0.3" />
               <circle cx="18" cy="26" r="1.8" fill="#ffffff" />
               <circle cx="32" cy="16" r="1.8" fill="#ffffff" />
               <circle cx="46" cy="26" r="1.8" fill="#ffffff" />
-              <line x1="18" y1="26" x2="32" y2="16" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-              <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
             </svg>
           </div>
           <div style={{ width: 36, height: 6, borderRadius: "50%", background: "rgb(10,10,10)", animation: "shadow-pulse 1.2s ease-in-out infinite" }} />
-          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-            <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
-            <span style={{ color: "rgb(148,163,184)", fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" }}>by viasocket</span>
-          </div>
         </div>
       </div>
     );
   }
 
+  const steps = [
+    {
+      num: "01",
+      title: "Connect your AI client",
+      desc: "Paste one MCP URL into Claude, Cursor, ChatGPT or any MCP-compatible client. Done.",
+    },
+    {
+      num: "02",
+      title: "Pick your apps & actions",
+      desc: `Choose from ${appsCount} integrations. Toggle exactly which actions your AI is allowed to run.`,
+    },
+    {
+      num: "03",
+      title: "Let your AI execute",
+      desc: "Your AI acts in the real world: creating tickets, sending messages, updating records.",
+    },
+  ];
+
   return (
-    <div
-      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: "rgb(250,250,250)" }}
-    >
-      <FloatingMushrooms />
+    <div className="min-h-screen w-full flex" style={{ background: "#2ebd85" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');`}</style>
 
-      {/* Glow blobs */}
-      <div style={{ position: "fixed", top: "-10%", left: "-5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.03) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
-      <div style={{ position: "fixed", bottom: "-10%", right: "-5%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 70%)", zIndex: 0, pointerEvents: "none" }} />
-
-      {/* Top bar */}
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-            <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-            <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(40,40,40)" />
-            <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
-            <circle cx="18" cy="26" r="2" fill="white" opacity="0.7" />
-            <circle cx="32" cy="16" r="2" fill="white" opacity="0.7" />
-            <circle cx="46" cy="26" r="2" fill="white" opacity="0.7" />
-          </svg>
-          <span style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 17, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Mashroom</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, padding: "6px 14px" }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e", animation: "pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontFamily: "Geist, sans-serif", fontSize: 11, fontWeight: 600, color: "rgb(80,80,80)", letterSpacing: "0.06em" }}>SECURE LOGIN</span>
-        </div>
-      </div>
-
-      {/* Main card */}
+      {/* Left — 60% green panel */}
       <div
+        className="hidden md:flex flex-col"
         style={{
+          flex: "0 0 60%",
+          background: "#2ebd85",
+          padding: "48px 52px 40px",
           position: "relative",
-          zIndex: 1,
-          width: "100%",
-          maxWidth: 420,
-          margin: "0 16px",
-          background: "rgb(255,255,255)",
-          border: "1px solid rgb(226,232,240)",
-          borderRadius: 20,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)",
-          padding: "44px 40px 36px",
-          animation: "slideUp 0.5s cubic-bezier(0.16,1,0.3,1) both",
+          overflow: "hidden",
         }}
       >
-        {/* Card corner accents */}
-        <div style={{ position: "absolute", top: -1, left: -1, width: 24, height: 24, borderTop: "2px solid rgba(0,0,0,0.15)", borderLeft: "2px solid rgba(0,0,0,0.15)", borderRadius: "20px 0 0 0" }} />
-        <div style={{ position: "absolute", bottom: -1, right: -1, width: 24, height: 24, borderBottom: "2px solid rgba(0,0,0,0.15)", borderRight: "2px solid rgba(0,0,0,0.15)", borderRadius: "0 0 20px 0" }} />
+        {/* Dot grid pattern */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }} />
 
-        {/* Logo + heading */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgb(243,244,246)", border: "1px solid rgb(226,232,240)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-                <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="rgb(10,10,10)" />
-                <path d="M4 38C4 40 6 42 10 42H54C58 42 60 40 60 38H4Z" fill="rgb(40,40,40)" />
-                <path d="M24 42H40V56C40 58.2 38.2 60 36 60H28C25.8 60 24 58.2 24 56V42Z" fill="rgb(10,10,10)" />
-                <circle cx="18" cy="26" r="2" fill="white" opacity="0.7" />
-                <circle cx="32" cy="16" r="2" fill="white" opacity="0.7" />
-                <circle cx="46" cy="26" r="2" fill="white" opacity="0.7" />
-              </svg>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+          {/* Label */}
+          <p style={{ fontFamily: PIXEL_FONT, fontSize: 9, color: "rgba(0,0,0,0.45)", letterSpacing: "0.05em", margin: "0 0 36px" }}>
+            BY viaSocket · MCP PLATFORM
+          </p>
+
+          {/* Hero headline */}
+          <div style={{ marginBottom: 44 }}>
+            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#fff", lineHeight: 1.5, margin: 0 }}>YOUR AI</p>
+            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#0a5c36", lineHeight: 1.5, margin: 0 }}>CONNECTED</p>
+            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#fff", lineHeight: 1.5, margin: 0 }}>TO EVERYTHING</p>
+          </div>
+
+          {/* Steps — 2-col grid, 03 full width */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {steps.slice(0, 2).map((s) => (
+              <StepCard key={s.num} step={s} />
+            ))}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <StepCard step={steps[2]} />
             </div>
           </div>
-          <h1 style={{ fontFamily: "Geist, sans-serif", fontSize: 26, fontWeight: 800, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.03em" }}>Welcome back</h1>
-          <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 14, color: "rgb(100,116,139)", margin: "8px 0 0" }}>Sign in to your AI workspace</p>
-        </div>
-
-        {/* Auth widget */}
-        <div className="w-full flex flex-col items-center justify-center">
-          <div
-            data-testid="login-container"
-            id={REFERENCE_ID}
-            className="w-full flex flex-col justify-center items-center"
-          />
-        </div>
-
-        {/* Divider */}
-        <div style={{ margin: "24px 0 20px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ flex: 1, height: 1, background: "rgb(226,232,240)" }} />
-          <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 11, color: "rgb(148,163,184)", letterSpacing: "0.05em" }}>TRUSTED BY THOUSANDS</span>
-          <div style={{ flex: 1, height: 1, background: "rgb(226,232,240)" }} />
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-          {[[appsCount, "Integrations"], ["99.9%", "Uptime"], ["24/7", "Support"]].map(([val, label]) => (
-            <div key={label} style={{ textAlign: "center", background: "rgb(248,249,251)", borderRadius: 10, padding: "10px 6px", border: "1px solid rgb(226,232,240)" }}>
-              <div style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 15, color: "rgb(10,10,10)" }}>{val}</div>
-              <div style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 10, color: "rgb(148,163,184)", letterSpacing: "0.05em", marginTop: 2 }}>{label.toUpperCase()}</div>
-            </div>
-          ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <p style={{ position: "relative", zIndex: 1, marginTop: 24, textAlign: "center", fontSize: 11, color: "rgb(148,163,184)", fontFamily: '"DM Sans", sans-serif', lineHeight: 1.7 }}>
-        By continuing, you agree to{" "}
-        <a href="https://viasocket.com/terms/" target="_blank" rel="noreferrer" style={{ color: "rgb(100,116,139)", textDecoration: "none", fontWeight: 600 }}>Terms of Service</a>
-        {" "}and{" "}
-        <a href="https://viasocket.com/privacy/" target="_blank" rel="noreferrer" style={{ color: "rgb(100,116,139)", textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>
-      </p>
+      {/* Right — 40% beige panel */}
+      <div
+        className="flex flex-col"
+        style={{
+          flex: "0 0 40%",
+          background: "#f0ece4",
+          position: "relative",
+          borderRadius: "24px 0 0 24px",
+          overflow: "hidden",
+        }}
+      >
+        {/* Subtle grid on right */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: "linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+          {/* Logo top center */}
+          <div style={{ paddingTop: 40, textAlign: "center" }}>
+            <p style={{ fontFamily: PIXEL_FONT, fontSize: 13, color: "#0a0a0a", letterSpacing: "0.04em", margin: "0 0 4px" }}>MUSHROOMS</p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#888", margin: 0 }}>by viaSocket</p>
+          </div>
+
+          {/* Center — heading + auth */}
+          <div className="flex-1 flex flex-col items-center justify-center" style={{ padding: "0 44px" }}>
+            <div style={{ width: "100%", maxWidth: 340 }}>
+              <h2 style={{
+                fontFamily: PIXEL_FONT,
+                fontSize: "clamp(13px, 1.6vw, 18px)",
+                color: "#0a0a0a",
+                lineHeight: 1.6,
+                margin: "0 0 12px",
+              }}>
+                SIGN UP TO YOUR<br />MUSHROOMS CLUSTER
+              </h2>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#666", margin: "0 0 28px", lineHeight: 1.5 }}>
+                Access your MCP endpoint and connected apps.
+              </p>
+
+              {/* Auth widget */}
+              <div
+                id={REFERENCE_ID}
+                className="w-full flex flex-col justify-center items-center"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: "16px 32px 24px", textAlign: "center" }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#aaa", margin: "0 0 3px", lineHeight: 1.6 }}>
+              By signing in you accept our{" "}
+              <a href="https://viasocket.com/terms/" target="_blank" rel="noreferrer" style={{ color: "#777", textDecoration: "underline" }}>Fair Usage Policy</a>
+              {" "}&amp;{" "}
+              <a href="https://viasocket.com/privacy/" target="_blank" rel="noreferrer" style={{ color: "#777", textDecoration: "underline" }}>Privacy Policy</a>
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#bbb", margin: 0 }}>
+              © {new Date().getFullYear()} mushrooms. All rights reserved.{" "}
+              <a href="https://viasocket.com/privacy/" target="_blank" rel="noreferrer" style={{ color: "#999", textDecoration: "none" }}>Privacy</a>
+              {" "}and{" "}
+              <a href="https://viasocket.com/terms/" target="_blank" rel="noreferrer" style={{ color: "#999", textDecoration: "none" }}>Terms</a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
