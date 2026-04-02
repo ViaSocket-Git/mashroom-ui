@@ -52,6 +52,7 @@ function Hero() {
       </p>
       <div className="flex items-center justify-center gap-3">
         <button
+          data-testid="embed-build-on-viasocket"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           className="inline-flex items-center gap-1.5 px-6 py-3 rounded-[10px] font-[Geist,sans-serif] text-[15px] font-medium text-white border-none cursor-pointer transition-all duration-150"
@@ -339,6 +340,7 @@ function EmbedTopBar() {
   return (
     <div className="bg-white border-b border-[#e2e8f0] h-16 px-6 flex items-center shrink-0">
       <button
+        data-testid="embed-back-to-clusters"
         onClick={() => router.back()}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
