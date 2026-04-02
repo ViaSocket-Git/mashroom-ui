@@ -19,7 +19,7 @@ export default function AccountPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="absolute z-50 flex flex-col"
+      className="absolute z-[9999999] flex flex-col"
       style={{
         top: "calc(100% + 10px)",
         right: 0,
