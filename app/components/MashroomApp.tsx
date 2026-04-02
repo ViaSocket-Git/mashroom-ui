@@ -37,6 +37,7 @@ function EmptyAccountButton() {
     <div ref={accountRef} className="relative">
       {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
       <button
+        data-testid="account-button"
         onClick={() => setShowAccount((v) => !v)}
         className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
         style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
@@ -212,6 +213,7 @@ export default function MashroomApp() {
 
               {/* CTA button */}
               <button
+                data-testid="plant-first-powerup"
                 onClick={handleNewCluster}
                 className="flex items-center gap-2 cursor-pointer"
                 style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", fontSize: 14, padding: "0 22px", height: 40, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em", borderRadius: 6 }}

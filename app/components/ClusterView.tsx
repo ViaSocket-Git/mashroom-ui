@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Zap, X, Copy, Check, ChevronRight, User } from "lucide-react";
+import { X, Copy, Check, User } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
-import EmbedModal from "./EmbedModal";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
@@ -47,12 +46,6 @@ function replaceYourValueHere<T>(obj: T): ReplacedValue<T> {
 }
 
 
-interface PowerUp {
-  id: string;
-  name: string;
-  description: string;
-}
-
 interface AiClient {
   id: string;
   title: string;
@@ -67,7 +60,7 @@ interface Cluster {
   clientColor: string;
   projectId: string;
   url: string;
-  powerUps: PowerUp[];
+  powerUps: { id: string; name: string; description: string }[];
   selectedClient: AiClient | null;
 }
 
@@ -76,66 +69,6 @@ interface ClusterViewProps {
   onAddPowerUp: () => void;
   onChangeClient: () => void;
   hideSidebar?: boolean;
-}
-
-function ToolCards({ clusterId, onOpenPanel, onToolClick, newToolIds = [] }: { clusterId: string; onOpenPanel: () => void; onToolClick: (flowId: string) => void; newToolIds?: string[] }) {
-  const dispatch = useAppDispatch();
-  const tools = useAppSelector((s) => s.tools.byMcpServerId[clusterId] ?? []);
-  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[clusterId] ?? null);
-
-  useEffect(() => {
-    if (!embedToken) dispatch(fetchEmbedToken(clusterId));
-  }, [clusterId, embedToken, dispatch]);
-
-  if (tools.length === 0) return null;
-
-  function handleToolClick(tool: { flowId: string }) {
-    onToolClick(tool.flowId);
-  }
-
-  return (
-    <>
-      {tools.map((tool) => {
-        const isNew = newToolIds.includes(tool.flowId);
-        return (
-          <div
-            key={tool.flowId}
-            className={`relative overflow-hidden group/card ${isNew ? "animate-added-glow" : ""}`}
-            style={{
-              background: "rgb(255,255,255)",
-              border: isNew ? "1px solid rgb(34,197,94)" : "1px solid rgb(203,213,225)",
-              transition: "box-shadow 0.2s, border-color 0.2s",
-              borderRadius: 4,
-              boxShadow: isNew ? "0 0 12px rgba(34,197,94,0.3)" : "rgba(0,0,0,0.06) 0px 2px 8px, rgba(0,0,0,0.03) 0px 0px 0px 1px",
-              animation: isNew ? "tool-added-scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)" : "none"
-            }}
-          >
-            <button onClick={() => handleToolClick(tool)} className="w-full flex items-center gap-2.5 px-3 py-3 cursor-pointer border-0 text-left" style={{ background: "transparent" }}>
-              <div className="flex items-center shrink-0" style={{ gap: 2 }}>
-                {tool.serviceIcons && tool.serviceIcons.length > 0 ? (
-                  tool.serviceIcons.map((icon, i) => (
-                    <div key={i} className="w-7 h-7 flex items-center justify-center" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", marginLeft: i > 0 ? -6 : 0, zIndex: tool.serviceIcons.length - i }}>
-                      <img src={icon} alt="" style={{ width: 16, height: 16, objectFit: "contain" }} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="w-7 h-7 flex items-center justify-center shrink-0" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px" }}>
-                    <Zap width={15} height={15} style={{ color: "rgb(100,116,139)" }} />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>{tool.name}</p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <ChevronRight width={11} height={11} strokeWidth={2.5} className="group-hover/card:text-[#64748b] group-hover/card:translate-x-0.5" style={{ color: "rgb(176,184,196)", transition: "color 0.15s, transform 0.15s" }} />
-              </div>
-            </button>
-          </div>
-        );
-      })}
-    </>
-  );
 }
 
 function ClientIcon({ clientId, color }: { clientId: string; color: string }) {
@@ -179,6 +112,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   }
   return (
     <button
+      data-testid={`copy-${label.toLowerCase().replace(/\s+/g, "-")}`}
       onClick={handleCopy}
       className="flex items-center gap-1.5 cursor-pointer"
       style={{ background: "rgb(243,244,246)", border: "1px solid rgb(226,232,240)", borderRadius: 4, padding: "4px 10px", fontSize: 12, fontFamily: "Geist, sans-serif", fontWeight: 500, color: "rgb(60,60,60)" }}
@@ -248,6 +182,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
             </div>
           </div>
           <button
+            data-testid="cluster-config-modal-close"
             onClick={onClose}
             className="cursor-pointer flex items-center justify-center"
             style={{ background: "transparent", border: "none", color: "rgb(160,170,185)", padding: 4, borderRadius: 6, lineHeight: 0 }}
@@ -289,7 +224,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
               </div>
             </div>
 
-            {/* Right: setup steps — no card borders, just circle + text */}
+            {/* Right: setup steps */}
             <div className="shrink-0 flex flex-col" style={{ width: 230 }}>
               <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif", textTransform: "uppercase" }}>Setup Steps</p>
               <div className="flex flex-col" style={{ border: "1.5px solid rgb(220,225,234)", borderRadius: 10, overflow: "hidden" }}>
@@ -341,6 +276,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
         {/* Modal footer */}
         <div className="flex justify-end px-7 py-4" style={{ borderTop: "1px solid rgb(235,237,242)" }}>
           <button
+            data-testid="cluster-config-modal-done"
             onClick={onClose}
             className="flex items-center gap-2 cursor-pointer"
             style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 14, fontFamily: "Geist, sans-serif", fontWeight: 600, letterSpacing: "-0.01em" }}
@@ -466,41 +402,46 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
 
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar }: ClusterViewProps) {
   const dispatch = useAppDispatch();
-
-  const [showPanel, setShowPanel] = useState(false);
-  const [pendingFlowId, setPendingFlowId] = useState<string | null>(null);
   const [showAccount, setShowAccount] = useState(false);
-  const [newToolIds, setNewToolIds] = useState<string[]>([]);
-  const [celebratingTool, setCelebratingTool] = useState<{ id: string; name: string; icon: string } | null>(null);
-
-  function handleToolClick(flowId: string) {
-    setPendingFlowId(flowId);
-    setShowPanel(true);
-  }
   const accountRef = useRef<HTMLDivElement>(null);
+  const embedScriptLoaded = useRef(false);
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
-        setShowAccount(false);
-      }
-    }
-    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showAccount]);
-
+  const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
   const tools = useAppSelector((s) => s.tools.byMcpServerId[cluster.id] ?? []);
-  const toolsLoading = useAppSelector((s) => s.tools.loadingFor[cluster.id] ?? false);
   const hasTools = tools.length > 0;
 
-  const [toolsWasLoading, setToolsWasLoading] = useState(false);
-  const [toolsHasFetched, setToolsHasFetched] = useState(tools.length > 0);
+  useEffect(() => {
+    if (!embedToken) dispatch(fetchEmbedToken(cluster.id));
+  }, [cluster.id, embedToken, dispatch]);
 
   useEffect(() => {
-    if (toolsLoading) setToolsWasLoading(true);
-    if (!toolsLoading && toolsWasLoading) setToolsHasFetched(true);
-    if (tools.length > 0) setToolsHasFetched(true);
-  }, [toolsLoading, toolsWasLoading, tools.length]);
+    if (!embedToken || embedScriptLoaded.current) return;
+
+    const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
+    if (existing) existing.parentNode?.removeChild(existing);
+    const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
+    if (existingContainer) existingContainer.parentNode?.removeChild(existingContainer);
+
+    const script = document.createElement("script");
+    script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
+    script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
+    script.setAttribute("embedToken", embedToken);
+    script.setAttribute("parentId", "viasocketParentId");
+    document.body.appendChild(script);
+    embedScriptLoaded.current = true;
+
+    return () => {
+      try {
+        const s = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
+        if (s?.parentNode === document.body) document.body.removeChild(s);
+        const container = document.getElementById("iframe-viasocket-embed-parent-container");
+        if (container) container.parentNode?.removeChild(container);
+      } catch (e) {
+        console.warn("ClusterView embed cleanup error:", e);
+      }
+      embedScriptLoaded.current = false;
+    };
+  }, [embedToken]);
 
   useEffect(() => {
     async function handleMessage(e: MessageEvent) {
@@ -533,28 +474,6 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
               ...res.data.data,
               serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],
             }));
-            // Close the modal if it was a create/publish action
-            if (action === "published" || action === "created") {
-              const toolId = (e.data.id as string) ?? "";
-              const toolName = (e.data.title as string) ?? (e.data.id as string) ?? "Power-up";
-              const toolIcon = (e.data.serviceIcons as string[])?.[0] ?? "";
-              setShowPanel(false);
-              setPendingFlowId(null);
-
-              // 1. Show Big Icon Pop in the grid panel
-              setCelebratingTool({ id: toolId, name: toolName, icon: toolIcon });
-
-              // 2. Transition to grid card (Faster - 1s total)
-              setTimeout(() => {
-                setCelebratingTool(null);
-                if (toolId) {
-                  setNewToolIds((prev) => [...prev, toolId]);
-                  setTimeout(() => {
-                    setNewToolIds((prev) => prev.filter((id) => id !== toolId));
-                  }, 2500);
-                }
-              }, 1000);
-            }
           }
         } catch (err) {
           console.error("[ClusterView] MCP tool API error:", err);
@@ -565,43 +484,15 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
     return () => window.removeEventListener("message", handleMessage);
   }, [cluster.id, dispatch]);
 
-  if (!toolsHasFetched) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
-        <style>{`
-          @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
-          @keyframes tool-added-scale { 0%{transform:scale(0.8);opacity:0} 70%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
-          @keyframes added-glow { 0%{box-shadow:0 0 0 rgba(34,197,94,0)} 50%{box-shadow:0 0 20px rgba(34,197,94,0.4)} 100%{box-shadow:0 0 0 rgba(34,197,94,0)} }
-          @keyframes tool-added-header { 0%{transform:scale(0.9);opacity:0} 15%{transform:scale(1);opacity:1} 85%{transform:scale(1);opacity:1} 100%{transform:scale(0.95);opacity:0} }
-          @keyframes celebration-pop { 0%{transform:scale(0.6);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
-          @keyframes celebration-fade-out { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.15)} }
-        `}</style>
-        {/* Header skeleton */}
-        <div className="shrink-0 px-6 flex items-center justify-between" style={{ height: 64, background: "transparent" }}>
-          <div style={{ width: 160, height: 20, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-        </div>
-        {/* Content skeleton */}
-        <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 pb-4 flex flex-col gap-2 overflow-hidden">
-          {/* Power Ups panel skeleton */}
-          <div className="flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
-            <div className="shrink-0 px-4 flex items-center" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
-              <div style={{ width: 100, height: 18, borderRadius: 6, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
-            </div>
-            <div className="px-3 pt-3">
-              <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} style={{ height: 58, borderRadius: 4, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
-                ))}
-              </div>
-            </div>
-          </div>
-          {/* Config panel skeleton */}
-          <div className="shrink-0" style={{ height: 57, borderRadius: 8, background: "linear-gradient(90deg,rgb(226,232,240) 25%,rgb(241,245,249) 50%,rgb(226,232,240) 75%)", backgroundSize: "400px 100%", animation: "shimmer 1.4s ease-in-out infinite", border: "1px solid rgb(226,232,240)" }} />
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setShowAccount(false);
+      }
+    }
+    if (showAccount) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAccount]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "rgb(248,249,251)" }}>
@@ -631,6 +522,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             <div ref={accountRef} className="relative">
               {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
               <button
+                data-testid="cluster-account-button"
                 onClick={() => setShowAccount((v) => !v)}
                 className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
                 style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
@@ -657,6 +549,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
               <div ref={accountRef} className="relative">
                 {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
                 <button
+                  data-testid="cluster-account-button"
                   onClick={() => setShowAccount((v) => !v)}
                   className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
                   style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
@@ -672,103 +565,9 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
       {/* Content — stacked full width */}
       <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 flex flex-col gap-2 h-full overflow-hidden">
 
-        {/* Power Ups */}
-        <div className="w-full flex-1 min-h-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
-          {/* Header */}
-          <div className="shrink-0 flex items-center justify-between px-4" style={{ height: 57, borderBottom: "1px solid rgb(226,232,240)" }}>
-            <div className="flex items-center gap-3">
-              <span style={{ fontFamily: "Geist, sans-serif", fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.02em" }}>Power Ups</span>
-            </div>
-          </div>
-          {/* Body */}
-          <div className="flex-1 min-h-0 relative overflow-y-auto flex flex-col" style={{ minHeight: 0 }}>
-            {/* Celebration Overlay (Grid-Focused) */}
-            {celebratingTool && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center p-6 bg-white/45 backdrop-blur-[4px] animate-[celebration-fade-out_0.35s_ease-in_0.75s_forwards]">
-                <div className="flex flex-col items-center gap-6 animate-[celebration-pop_0.45s_cubic-bezier(0.34,1.56,0.64,1)_both]">
-                  <div className="relative">
-                    <div className="absolute -inset-4 bg-green-400/20 blur-xl rounded-full animate-pulse" />
-                    <div className="relative w-24 h-24 flex items-center justify-center bg-white rounded-2xl border-[2px] border-green-200 shadow-[0_15px_35px_rgba(0,0,0,0.1)] p-3">
-                      {celebratingTool.icon ? (
-                        <img src={celebratingTool.icon} alt={celebratingTool.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <Zap width={40} height={40} style={{ color: "rgb(34,197,94)" }} />
-                      )}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-lg">
-                      <Check width={12} height={12} strokeWidth={4} style={{ color: "white" }} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span style={{ fontFamily: "Geist, sans-serif", fontSize: 11, fontWeight: 700, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.05em" }}>READY TO POWER UP</span>
-                    <h3 style={{ fontFamily: "Geist, sans-serif", fontSize: 24, fontWeight: 800, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.03em" }}>{celebratingTool.name}</h3>
-                  </div>
-                </div>
-              </div>
-            )}
-            {/* Has tools */}
-            {toolsHasFetched && tools.length > 0 && (
-              <div className="px-3 pt-3 pb-3">
-                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                  <ToolCards clusterId={cluster.id} onOpenPanel={() => setShowPanel(true)} onToolClick={handleToolClick} newToolIds={newToolIds} />
-                  <button
-                    onClick={() => setShowPanel(true)}
-                    className="relative overflow-hidden group/add cursor-pointer border-0 text-left"
-                    style={{ background: "rgb(250,251,252)", border: "2px dashed rgb(209,213,219)", transition: "border-color 0.2s, background 0.2s", borderRadius: 4 }}
-                  >
-                    <div className="flex items-center gap-2.5 px-3 py-3">
-                      <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full" style={{ background: "rgb(240,240,240)", border: "1.5px solid rgb(196,201,212)" }}>
-                        <Plus width={16} height={16} strokeWidth={2} style={{ color: "rgb(100,116,139)" }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontWeight: 500, fontSize: 13, letterSpacing: "-0.01em", margin: 0 }}>Add Power-Up</p>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Loading skeletons */}
-            {!toolsHasFetched && (
-              <div className="px-3 pt-3 pb-3">
-                <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} style={{ background: "rgb(243,244,246)", borderRadius: 4, height: 58, animation: "pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty state */}
-            {toolsHasFetched && tools.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
-                <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 700, fontSize: 22, color: "rgb(10,10,10)", margin: 0, letterSpacing: "-0.01em", textAlign: "center" }}>No power-ups yet</p>
-                <button
-                  onClick={() => setShowPanel(true)}
-                  className="flex flex-col items-center cursor-pointer"
-                  style={{ border: "1.5px solid rgb(46,168,126)", borderRadius: 12, background: "rgba(46,168,126,0.04)", padding: "14px 24px", gap: 10, width: "100%", maxWidth: 300 }}
-                >
-                  <span style={{ color: "rgb(46,168,126)", fontFamily: "Geist, sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: "-0.01em" }}>Add apps from 2500+ apps</span>
-                  <div className="flex items-center gap-1.5">
-                    {/* Gmail */}
-                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 6.5V18a1.5 1.5 0 001.5 1.5H5V8.8l7 5.25 7-5.25V19.5h1.5A1.5 1.5 0 0022 18V6.5a2 2 0 00-3.18-1.61L12 10.2 5.18 4.89A2 2 0 002 6.5z" fill="#EA4335" /></svg>
-                    </div>
-                    {/* Notion */}
-                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326l-2.197-1.586c-.42-.326-.98-.7-2.054-.606L3.01 2.882c-.467.047-.56.28-.374.466l1.823 1.86z" fill="#000" /><path d="M5.252 7.012v12.57c0 .653.326.933.98.886l14.57-.84c.654-.046.746-.466.746-1.026V6.172c0-.56-.233-.84-.7-.793l-15.223.886c-.514.047-.373.234-.373.747z" fill="#fff" stroke="#000" strokeWidth="0.5" /><path d="M14.86 8.384c.094.42 0 .84-.42.886l-.654.14v9.278c-.56.28-1.12.42-1.493.42-.7 0-.886-.233-1.4-.886l-4.29-6.74v6.507l1.353.28s0 .84-1.12.84l-3.12.186c-.093-.186 0-.653.327-.746l.84-.234V9.69l-1.166-.093c-.094-.42.14-1.026.793-1.073l3.353-.233 4.478 6.834V9.037l-1.12-.14c-.094-.513.28-.886.746-.933l3.493-.233z" fill="#000" /></svg>
-                    </div>
-                    {/* Slack */}
-                    <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.166a2.125 2.125 0 1 1-2.125-2.125h2.125v2.125zm1.063 0a2.125 2.125 0 1 1 4.25 0v5.292a2.125 2.125 0 1 1-4.25 0v-5.292z" fill="#E01E5A" /><path d="M8.855 5.042a2.125 2.125 0 1 1 2.125-2.125v2.125H8.855zm0 1.063a2.125 2.125 0 1 1 0 4.25H3.542a2.125 2.125 0 1 1 0-4.25h5.313z" fill="#36C5F0" /><path d="M18.958 8.855a2.125 2.125 0 1 1 2.125 2.125h-2.125V8.855zm-1.063 0a2.125 2.125 0 1 1-4.25 0V3.542a2.125 2.125 0 1 1 4.25 0v5.313z" fill="#2EB67D" /><path d="M15.145 18.958a2.125 2.125 0 1 1-2.125 2.125v-2.125h2.125zm0-1.063a2.125 2.125 0 1 1 0-4.25h5.313a2.125 2.125 0 1 1 0 4.25h-5.313z" fill="#ECB22E" /></svg>
-                    </div>
-                    <Plus width={18} height={18} strokeWidth={3} style={{ color: "rgb(46,168,126)" }} />
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
+        {/* Embed — always open */}
+        <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+          <div id="viasocketParentId" className="flex-1 min-h-0 w-full" />
         </div>
 
         {/* Configuration panel */}
@@ -776,8 +575,6 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
           <InlineConfigSection cluster={cluster} onChangeClient={onChangeClient} hasTools={hasTools} />
         </div>
       </div>
-
-      <EmbedModal open={showPanel} onClose={() => { setShowPanel(false); setPendingFlowId(null); }} clusterId={cluster.id} pendingFlowId={pendingFlowId} />
     </div>
   );
 }

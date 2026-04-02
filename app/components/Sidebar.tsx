@@ -131,6 +131,7 @@ export default function Sidebar({
       <div className="px-3 pt-4 flex-1 overflow-y-auto relative">
         <div className="mb-4">
           <button
+            data-testid="sidebar-new-cluster"
             onClick={onNewCluster}
             className="flex items-center gap-2 cursor-pointer w-full justify-center"
             style={{
@@ -182,6 +183,7 @@ export default function Sidebar({
             return (
               <div key={cluster.id} className="relative group/cluster">
                 <button
+                  data-testid={`sidebar-cluster-${cluster.id}`}
                   onClick={() => onSelectCluster(cluster.id)}
                   className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
                   style={{
@@ -203,6 +205,7 @@ export default function Sidebar({
 
                 {/* Ellipsis button — visible on hover or when menu open */}
                 <button
+                  data-testid={`sidebar-cluster-menu-${cluster.id}`}
                   onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : cluster.id); }}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer opacity-0 group-hover/cluster:opacity-100 transition-opacity"
                   style={{
@@ -223,6 +226,7 @@ export default function Sidebar({
                     style={{ top: "calc(100% + 4px)", minWidth: 150, background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.1) 0px 4px 16px", overflow: "hidden" }}
                   >
                     <button
+                      data-testid={`sidebar-change-client-${cluster.id}`}
                       onClick={() => { setOpenMenuId(null); onChangeClient(cluster.id); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 cursor-pointer text-left"
                       style={{ background: "transparent", border: "none", fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: "rgb(10,10,10)", fontWeight: 500 }}
@@ -232,6 +236,7 @@ export default function Sidebar({
                     </button>
                     <div style={{ height: 1, background: "rgb(226,232,240)", margin: "2px 0" }} />
                     <button
+                      data-testid={`sidebar-delete-cluster-${cluster.id}`}
                       disabled={deletingId === cluster.id}
                       onClick={async () => {
                         setOpenMenuId(null);
