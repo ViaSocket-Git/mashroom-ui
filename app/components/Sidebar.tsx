@@ -1,10 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Plus, ArrowRight, MoreVertical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, ArrowRight, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { deleteCluster, removeCluster } from "@/lib/features/clustersSlice";
+import DeleteClusterModal from "./DeleteClusterModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AiClient {
   id: string;
@@ -77,29 +85,36 @@ export default function Sidebar({
   const dispatch = useAppDispatch();
   const router = useRouter();
   const clustersLoading = useAppSelector((s) => s.clusters.loading);
-  const [wasLoading, setWasLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(clusters.length > 0);
+  const [confirmDeleteCluster, setConfirmDeleteCluster] = useState<{ id: string; name: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
+  async function handleConfirmDelete() {
+    if (!confirmDeleteCluster) return;
+    const { id, name } = confirmDeleteCluster;
+    setDeletingId(id);
+    setConfirmDeleteCluster(null);
+    const cluster = clusters.find((c) => c.id === id);
+    await dispatch(deleteCluster({ mcpServerId: id, name, client: cluster?.client ?? "" }));
+    dispatch(removeCluster(id));
+    const remaining = clusters.filter((c) => c.id !== id);
+    if (remaining.length > 0) {
+      onSelectCluster(remaining[0].id);
+      router.push(`/cluster/${remaining[0].id}`);
+    } else {
+      router.push(`/dashboard`);
     }
-    if (openMenuId) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openMenuId]);
+    setDeletingId(null);
+    if (onDeleteCluster) onDeleteCluster(id);
+  }
 
   useEffect(() => {
     if (clusters) { setHasFetched(true); return; }
-    if (clustersLoading) setWasLoading(true);
-    if (!clustersLoading && wasLoading) setHasFetched(true);
-  }, [clustersLoading, wasLoading, clusters.length]);
+    if (clustersLoading) setHasFetched(false);
+  }, [clustersLoading, clusters.length]);
 
   return (
+    <>
     <aside
       className="shrink-0 h-screen sticky top-0 flex flex-col border-r"
       style={{ width: 260, background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)" }}
@@ -179,7 +194,6 @@ export default function Sidebar({
           )}
           {clusters.map((cluster) => {
             const isActive = activeClusterId === cluster.id;
-            const isMenuOpen = openMenuId === cluster.id;
             return (
               <div key={cluster.id} className="relative group/cluster">
                 <button
@@ -203,67 +217,35 @@ export default function Sidebar({
                   <span className="flex-1 truncate">{cluster.name}</span>
                 </button>
 
-                {/* Ellipsis button — visible on hover or when menu open */}
-                <button
-                  data-testid={`sidebar-cluster-menu-${cluster.id}`}
-                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(isMenuOpen ? null : cluster.id); }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer opacity-0 group-hover/cluster:opacity-100 transition-opacity"
-                  style={{
-                    width: 22, height: 22, borderRadius: 4, border: "none",
-                    background: isMenuOpen ? "rgb(226,232,240)" : "transparent",
-                    color: "rgb(100,116,139)",
-                    opacity: isMenuOpen ? 1 : undefined,
-                  }}
-                >
-                  <MoreVertical width={13} height={13} strokeWidth={2} />
-                </button>
-
-                {/* Dropdown menu */}
-                {isMenuOpen && (
-                  <div
-                    ref={menuRef}
-                    className="absolute right-0 z-50"
-                    style={{ top: "calc(100% + 4px)", minWidth: 150, background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 6, boxShadow: "rgba(0,0,0,0.1) 0px 4px 16px", overflow: "hidden" }}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    data-testid={`sidebar-cluster-menu-${cluster.id}`}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/cluster:opacity-100 transition-opacity flex items-center justify-center rounded cursor-pointer border-none bg-transparent"
+                    style={{ width: 22, height: 22, color: "rgb(100,116,139)" }}
                   >
-                    <button
+                    <MoreVertical width={13} height={13} strokeWidth={2} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13, minWidth: 160 }}>
+                    <DropdownMenuItem
                       data-testid={`sidebar-change-client-${cluster.id}`}
-                      onClick={() => { setOpenMenuId(null); onChangeClient(cluster.id); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 cursor-pointer text-left"
-                      style={{ background: "transparent", border: "none", fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: "rgb(10,10,10)", fontWeight: 500 }}
+                      onClick={() => onChangeClient(cluster.id)}
+                      style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13 }}
                     >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                      <Pencil width={13} height={13} />
                       Change AI Client
-                    </button>
-                    <div style={{ height: 1, background: "rgb(226,232,240)", margin: "2px 0" }} />
-                    <button
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
                       data-testid={`sidebar-delete-cluster-${cluster.id}`}
-                      disabled={deletingId === cluster.id}
-                      onClick={async () => {
-                        setOpenMenuId(null);
-                        setDeletingId(cluster.id);
-                        await dispatch(deleteCluster({ mcpServerId: cluster.id, name: cluster.name, client: cluster.client }));
-                        dispatch(removeCluster(cluster.id));
-                        const remaining = clusters.filter((c) => c.id !== cluster.id);
-                        if (remaining.length > 0) {
-                          const next = remaining[0].id;
-                          onSelectCluster(next);
-                          router.push(`/cluster/${next}`);
-                        }
-                        else{
-                          router.push(`/dashboard`);
-
-                        }
-                        setDeletingId(null);
-                        if (onDeleteCluster) onDeleteCluster(cluster.id);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 cursor-pointer text-left"
-                      style={{ background: "transparent", border: "none", fontFamily: '"DM Sans", sans-serif', fontSize: 13, color: deletingId === cluster.id ? "rgb(148,163,184)" : "rgb(220,38,38)", fontWeight: 500 }}
+                      onClick={() => setConfirmDeleteCluster({ id: cluster.id, name: cluster.name })}
+                      className="text-destructive focus:text-destructive"
+                      style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 13 }}
                     >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                      {deletingId === cluster.id ? "Deleting…" : "Delete Cluster"}
-                    </button>
-                  </div>
-                )}
+                      <Trash2 width={13} height={13} />
+                      Delete Cluster
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             );
           })}
@@ -286,5 +268,14 @@ export default function Sidebar({
       </div>
 
     </aside>
+
+    <DeleteClusterModal
+      open={!!confirmDeleteCluster}
+      clusterName={confirmDeleteCluster?.name ?? ""}
+      isDeleting={!!deletingId}
+      onCancel={() => setConfirmDeleteCluster(null)}
+      onConfirm={handleConfirmDelete}
+    />
+    </>
   );
 }
