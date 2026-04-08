@@ -6,8 +6,8 @@ import Providers from "./providers";
 export const runtime = "edge";
 
 export const metadata: Metadata = {
-  title: "Mashroom",
-  description: "Mashroom - AI powered MCP server manager",
+  title: "Mushroom",
+  description: "Mushroom - AI powered MCP server manager",
   icons: {
     icon: "/icons/mushroom-logo.svg",
   },
