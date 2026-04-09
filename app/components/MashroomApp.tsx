@@ -18,6 +18,7 @@ import {
 } from "@/lib/features/clustersSlice";
 import { fetchAiClients } from "@/lib/features/aiClientsSlice";
 import type { AiClient } from "@/lib/features/aiClientsSlice";
+import { posthog, trackEvent, identifyUser } from "@/lib/analytics/posthog";
 
 function EmptyAccountButton() {
   const [showAccount, setShowAccount] = useState(false);
@@ -52,6 +53,9 @@ export default function MashroomApp() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const clusters = useAppSelector((s) => s.clusters.clusters);
+  const userId = useAppSelector((s) => s.clusters.userId);
+  const userName = useAppSelector((s) => s.clusters.userName);
+  const userEmail = useAppSelector((s) => s.clusters.userEmail);
 
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -71,10 +75,28 @@ export default function MashroomApp() {
     }
   }, [hasFetched, clusters.length]);
 
+  useEffect(() => {
+    if (userId && userName) {
+      identifyUser(userId, {
+        name: userName,
+        email: userEmail || undefined,
+      });
+      
+      // Track user visit for email campaign targeting
+      trackEvent('user_visited', {
+        has_clusters: clusters.length > 0,
+        cluster_count: clusters.length,
+        email: userEmail,
+        visit_timestamp: new Date().toISOString()
+      });
+    }
+  }, [userId, userName, userEmail, clusters.length]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
 
   function handleNewCluster() {
+    trackEvent('new_cluster_button_clicked');
     setModalMode("newCluster");
     setIsModalOpen(true);
   }
@@ -97,7 +119,15 @@ export default function MashroomApp() {
     if (modalMode === "newCluster") {
       dispatch(createCluster({ client: client.title, clientColor, selectedClient: client })).then((action: any) => {
         const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
-        if (newId) router.push(`/cluster/${newId}`);
+        if (newId) {
+          console.log('New cluster created:', newId);
+          trackEvent('cluster_created', {
+            cluster_id: newId,
+            client: client.title,
+            is_first_cluster: clusters.length === 0
+          });
+          router.push(`/cluster/${newId}`);
+        }
       });
     } else if (modalMode === "changeClient" && targetClusterId) {
       const target = clusters.find((c) => c.id === targetClusterId);
