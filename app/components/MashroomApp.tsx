@@ -120,7 +120,6 @@ export default function MashroomApp() {
       dispatch(createCluster({ client: client.title, clientColor, selectedClient: client })).then((action: any) => {
         const newId = action.payload?.apiCluster?._id ?? action.payload?.id;
         if (newId) {
-          console.log('New cluster created:', newId);
           trackEvent('cluster_created', {
             cluster_id: newId,
             client: client.title,
