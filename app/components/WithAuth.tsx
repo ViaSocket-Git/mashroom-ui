@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { getFromCookies, setInCookies } from "@/lib/utils/cookies";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
@@ -14,10 +14,12 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
     const pathName = usePathname();
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
+    const initCalledRef = useRef(false);
 
     const proxy_auth_token = searchParams.get("proxy_auth_token");
 
     useEffect(() => {
+      initCalledRef.current = false;
       const runEffect = async () => {
         const proxyToken = getFromCookies("proxy_token");
         const proxyAuthToken = proxy_auth_token;
@@ -48,6 +50,7 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
 
         const configuration = {
           referenceId: REFERENCE_ID,
+          type: "authorization",
           addInfo: {
             redirect_path: "/",
           },
@@ -59,9 +62,13 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
           },
         };
 
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.onload = () => {
+        const SCRIPT_SRC = "https://proxy.msg91.com/assets/proxy-auth/proxy-auth.js";
+
+        const runInit = () => {
+          if (initCalledRef.current) return;
+          initCalledRef.current = true;
+          const widgetContainer = document.getElementById(REFERENCE_ID);
+          if (widgetContainer) widgetContainer.innerHTML = "";
           const checkInitVerification = setInterval(() => {
             if (typeof initVerification === "function") {
               clearInterval(checkInitVerification);
@@ -69,8 +76,16 @@ const WithAuth = <P extends object>(Children: React.ComponentType<P & { loading:
             }
           }, 100);
         };
-        script.src = "https://proxy.msg91.com/assets/proxy-auth/proxy-auth.js";
-        document.body.appendChild(script);
+
+        if (document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
+          runInit();
+        } else {
+          const script = document.createElement("script");
+          script.type = "text/javascript";
+          script.src = SCRIPT_SRC;
+          script.onload = runInit;
+          document.body.appendChild(script);
+        }
       };
 
       runEffect();
