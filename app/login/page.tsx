@@ -10,13 +10,14 @@ import { integrationsApi } from "@/lib/api/integrationsApi";
 
 const REFERENCE_ID = process.env.NEXT_PUBLIC_REFERENCE_ID!;
 
-const PIXEL_FONT = "'Press Start 2P', 'Courier New', monospace";
+const HEADING_FONT = "'Space Grotesk', 'DM Sans', sans-serif";
 
 function StepCard({ step }: { step: { num: string; title: string; desc: string } }) {
   return (
     <div style={{
-      background: "rgba(0,0,0,0.18)",
-      borderRadius: 8,
+      background: "rgba(0,0,0,0.22)",
+      border: "1.5px solid rgba(255,255,255,0.18)",
+      borderRadius: 10,
       padding: "18px 20px",
       display: "flex",
       flexDirection: "column",
@@ -26,13 +27,14 @@ function StepCard({ step }: { step: { num: string; title: string; desc: string }
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        width: 32,
-        height: 32,
+        width: 36,
+        height: 36,
         border: "2px solid rgba(255,255,255,0.55)",
         borderRadius: 4,
-        fontFamily: PIXEL_FONT,
-        fontSize: 9,
-        color: "rgba(255,255,255,0.85)",
+        fontFamily: HEADING_FONT,
+        fontSize: 13,
+        fontWeight: 700,
+        color: "rgba(255,255,255,0.9)",
         flexShrink: 0,
       }}>
         {step.num}
@@ -117,18 +119,17 @@ function LoginPageInner({ loading }: { loading: boolean }) {
   ];
 
   return (
-    <div className="min-h-screen w-full flex" style={{ background: "#2ebd85" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');`}</style>
-
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "row", background: "#2ebd85" }}>
       {/* Left — 60% green panel */}
       <div
-        className="hidden md:flex flex-col"
         style={{
           flex: "0 0 60%",
           background: "#2ebd85",
           padding: "48px 52px 40px",
           position: "relative",
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* Dot grid pattern */}
@@ -140,15 +141,15 @@ function LoginPageInner({ loading }: { loading: boolean }) {
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
           {/* Label */}
-          <p style={{ fontFamily: PIXEL_FONT, fontSize: 9, color: "rgba(0,0,0,0.45)", letterSpacing: "0.05em", margin: "0 0 36px" }}>
+          <p style={{ fontFamily: HEADING_FONT, fontSize: 11, fontWeight: 500, color: "rgba(0,0,0,0.45)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 36px" }}>
             BY viaSocket · MCP PLATFORM
           </p>
 
           {/* Hero headline */}
           <div style={{ marginBottom: 44 }}>
-            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#fff", lineHeight: 1.5, margin: 0 }}>YOUR AI</p>
-            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#0a5c36", lineHeight: 1.5, margin: 0 }}>CONNECTED</p>
-            <p style={{ fontFamily: PIXEL_FONT, fontSize: "clamp(18px, 2.6vw, 28px)", color: "#fff", lineHeight: 1.5, margin: 0 }}>TO EVERYTHING</p>
+            <p style={{ fontFamily: HEADING_FONT, fontWeight: 700, fontSize: "clamp(22px, 3vw, 36px)", color: "#0a0a0a", lineHeight: 1.25, margin: 0, letterSpacing: "0.02em" }}>YOUR AI</p>
+            <p style={{ fontFamily: HEADING_FONT, fontWeight: 700, fontSize: "clamp(22px, 3vw, 36px)", color: "#fff", lineHeight: 1.25, margin: 0, letterSpacing: "0.02em" }}>CONNECTED</p>
+            <p style={{ fontFamily: HEADING_FONT, fontWeight: 700, fontSize: "clamp(22px, 3vw, 36px)", color: "#0a0a0a", lineHeight: 1.25, margin: 0, letterSpacing: "0.02em" }}>TO EVERYTHING</p>
           </div>
 
           {/* Steps — 2-col grid, 03 full width */}
@@ -167,7 +168,8 @@ function LoginPageInner({ loading }: { loading: boolean }) {
       <div
         className="flex flex-col"
         style={{
-          flex: "0 0 40%",
+          flex: "1 1 40%",
+          minWidth: 0,
           background: "#f0ece4",
           position: "relative",
           borderRadius: "24px 0 0 24px",
@@ -184,7 +186,7 @@ function LoginPageInner({ loading }: { loading: boolean }) {
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
           {/* Logo top center */}
           <div style={{ paddingTop: 40, textAlign: "center" }}>
-            <p style={{ fontFamily: PIXEL_FONT, fontSize: 13, color: "#0a0a0a", letterSpacing: "0.04em", margin: "0 0 4px" }}>MUSHROOMS</p>
+            <p style={{ fontFamily: HEADING_FONT, fontWeight: 700, fontSize: 18, color: "#0a0a0a", letterSpacing: "0.06em", margin: "0 0 4px" }}>MUSHROOMS</p>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: "#888", margin: 0 }}>by viaSocket</p>
           </div>
 
@@ -192,10 +194,12 @@ function LoginPageInner({ loading }: { loading: boolean }) {
           <div className="flex-1 flex flex-col items-center justify-center" style={{ padding: "0 44px" }}>
             <div style={{ width: "100%", maxWidth: 340 }}>
               <h2 style={{
-                fontFamily: PIXEL_FONT,
-                fontSize: "clamp(13px, 1.6vw, 18px)",
+                fontFamily: HEADING_FONT,
+                fontWeight: 700,
+                fontSize: "clamp(20px, 2.2vw, 28px)",
                 color: "#0a0a0a",
-                lineHeight: 1.6,
+                lineHeight: 1.3,
+                letterSpacing: "0.02em",
                 margin: "0 0 12px",
               }}>
                 SIGN UP TO YOUR<br />MUSHROOMS CLUSTER
