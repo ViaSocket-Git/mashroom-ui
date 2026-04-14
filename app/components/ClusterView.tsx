@@ -280,8 +280,8 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
   const selectedClient = useAppSelector((s) => s.clusters.selectedClientByClusterId[cluster.id]);
   const mcpUrl = cluster.url;
   const configJsonByType = {
-    url: { mcpServers: { mushroom: { url: mcpUrl, transport: "sse" } } },
-    npx: { mcpServers: { viasocket: { command: "npx", args: ["-y", "mcp-remote", mcpUrl] } } },
+    url: { mcpServers: { mushrooms: { url: mcpUrl, transport: "sse" } } },
+    npx: { mcpServers: { mushrooms: { command: "npx", args: ["-y", "mcp-remote", mcpUrl] } } },
     serverUrl: { mcpServers: { "viasocket Actions MCP": { serverUrl: mcpUrl } } },
   } as const;
   const configType = (selectedClient?.configType as keyof typeof configJsonByType) ?? "url";

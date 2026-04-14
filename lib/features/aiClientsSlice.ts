@@ -52,6 +52,7 @@ const aiClientsSlice = createSlice({
         state.loading = false;
         const TITLE_TO_DOMAIN: Record<string, string> = {
           "Claude": "claude.ai",
+          "Antigravity": "antigravity.google",
           "ChatGPT": "chatgpt.com",
           "Cursor": "cursor.com",
           "Amazon Quick Suite MCP Server": "aws.com",
@@ -74,6 +75,7 @@ const aiClientsSlice = createSlice({
         };
         const TITLE_TO_COLOR: Record<string, string> = {
           "Claude": "#D97757",
+          "Antigravity": "#000000",
           "ChatGPT": "#10a37f",
           "Cursor": "#000000",
           "Windsurf": "#1a1a1a",
