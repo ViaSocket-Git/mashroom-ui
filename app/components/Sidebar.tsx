@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, ArrowRight, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
-import { deleteCluster, removeCluster } from "@/lib/features/clustersSlice";
+import { deleteCluster, removeCluster, renameCluster, updateClusterOnServer } from "@/lib/features/clustersSlice";
 import DeleteClusterModal from "./DeleteClusterModal";
 import {
   DropdownMenu,
@@ -88,6 +88,24 @@ export default function Sidebar({
   const [hasFetched, setHasFetched] = useState(clusters.length > 0);
   const [confirmDeleteCluster, setConfirmDeleteCluster] = useState<{ id: string; name: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  function startRename(cluster: Cluster) {
+    setEditingId(cluster.id);
+    setEditingName(cluster.name);
+    setTimeout(() => { editInputRef.current?.focus(); editInputRef.current?.select(); }, 0);
+  }
+
+  function commitRename(cluster: Cluster) {
+    const trimmed = editingName.trim();
+    if (trimmed && trimmed !== cluster.name) {
+      dispatch(renameCluster({ clusterId: cluster.id, name: trimmed }));
+      dispatch(updateClusterOnServer({ mcpServerId: cluster.id, name: trimmed, client: cluster.client }));
+    }
+    setEditingId(null);
+  }
 
   async function handleConfirmDelete() {
     if (!confirmDeleteCluster) return;
@@ -196,26 +214,63 @@ export default function Sidebar({
             const isActive = activeClusterId === cluster.id;
             return (
               <div key={cluster.id} className="relative group/cluster">
-                <button
-                  data-testid={`sidebar-cluster-${cluster.id}`}
-                  onClick={() => onSelectCluster(cluster.id)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
-                  style={{
-                    borderRadius: 4,
-                    background: isActive ? "rgb(240,241,243)" : "transparent",
-                    color: isActive ? "rgb(10,10,10)" : "rgb(100,116,139)",
-                    fontFamily: '"DM Sans", sans-serif',
-                    border: isActive ? "1px solid rgb(208,212,219)" : "1px solid rgb(232,235,240)",
-                    boxShadow: isActive ? "rgba(0,0,0,0.06) 0px 1px 3px" : "none",
-                    fontWeight: isActive ? 600 : 400,
-                    transition: "0.15s",
-                    cursor: "pointer",
-                    paddingRight: 28,
-                  }}
-                >
-                  <ClusterIcon cluster={cluster} active={isActive} />
-                  <span className="flex-1 truncate">{cluster.name}</span>
-                </button>
+                {editingId === cluster.id ? (
+                  <div
+                    className="flex items-center gap-2.5 px-3 py-2.5 w-full"
+                    style={{
+                      borderRadius: 4,
+                      background: isActive ? "rgb(240,241,243)" : "rgb(248,250,252)",
+                      border: "1.5px solid rgb(99,102,241)",
+                      boxShadow: "0 0 0 2px rgba(99,102,241,0.15)",
+                    }}
+                  >
+                    <ClusterIcon cluster={cluster} active={isActive} />
+                    <input
+                      ref={editInputRef}
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onBlur={() => commitRename(cluster)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(cluster);
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      className="flex-1 min-w-0 bg-transparent outline-none text-sm"
+                      style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: isActive ? 600 : 400, color: "rgb(10,10,10)" }}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    data-testid={`sidebar-cluster-${cluster.id}`}
+                    onClick={() => onSelectCluster(cluster.id)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
+                    style={{
+                      borderRadius: 4,
+                      background: isActive ? "rgb(240,241,243)" : "transparent",
+                      color: isActive ? "rgb(10,10,10)" : "rgb(100,116,139)",
+                      fontFamily: '"DM Sans", sans-serif',
+                      border: isActive ? "1px solid rgb(208,212,219)" : "1px solid rgb(232,235,240)",
+                      boxShadow: isActive ? "rgba(0,0,0,0.06) 0px 1px 3px" : "none",
+                      fontWeight: isActive ? 600 : 400,
+                      transition: "0.15s",
+                      cursor: "pointer",
+                      paddingRight: 50,
+                    }}
+                  >
+                    <ClusterIcon cluster={cluster} active={isActive} />
+                    <span className="flex-1 truncate">{cluster.name}</span>
+                  </button>
+                )}
+
+                {editingId !== cluster.id && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startRename(cluster); }}
+                    className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/cluster:opacity-100 transition-opacity flex items-center justify-center rounded cursor-pointer border-none bg-transparent"
+                    style={{ right: 26, width: 20, height: 20, color: "rgb(100,116,139)" }}
+                    title="Rename"
+                  >
+                    <Pencil width={12} height={12} strokeWidth={2} />
+                  </button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger

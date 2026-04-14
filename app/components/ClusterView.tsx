@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { X, Copy, Check, User } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
-import { fetchEmbedToken } from "../../lib/features/clustersSlice";
 import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
@@ -383,44 +382,60 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   const dispatch = useAppDispatch();
   const [showAccount, setShowAccount] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
-  const embedScriptLoaded = useRef(false);
 
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
   const tools = useAppSelector((s) => s.tools.byMcpServerId[cluster.id] ?? []);
   const hasTools = tools.length > 0;
+  const embedSlotRef = useRef<HTMLDivElement>(null);
+
+  // Keep a single persistent #viasocketParentId div alive in document.body.
+  // On mount: move it into the visible slot. On unmount: park it back in body (hidden).
+  // This way the embed script's DOM is never destroyed across cluster/route changes.
+  useLayoutEffect(() => {
+    // Ensure a single persistent #viasocketParentId div exists and move it into the slot.
+    // It lives in document.body between mounts so the embed script's DOM is never destroyed.
+    let persistent = document.getElementById("viasocketParentId") as HTMLDivElement | null;
+    if (!persistent) {
+      persistent = document.createElement("div");
+      persistent.id = "viasocketParentId";
+      persistent.style.cssText = "display:none;width:100%;height:100%;flex:1;min-height:0;";
+      document.body.appendChild(persistent);
+    }
+    const slot = embedSlotRef.current;
+    if (slot && !slot.contains(persistent)) {
+      persistent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;";
+      slot.appendChild(persistent);
+    }
+    return () => {
+      if (persistent && document.body !== persistent.parentElement) {
+        persistent.style.cssText = "display:none;width:100%;height:100%;";
+        document.body.appendChild(persistent);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (!embedToken) dispatch(fetchEmbedToken(cluster.id));
-  }, [cluster.id, embedToken, dispatch]);
+    if (!embedToken) return;
 
-  useEffect(() => {
-    if (!embedToken || embedScriptLoaded.current) return;
-
-    const existing = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-    if (existing) existing.parentNode?.removeChild(existing);
-    const existingContainer = document.getElementById("iframe-viasocket-embed-parent-container");
-    if (existingContainer) existingContainer.parentNode?.removeChild(existingContainer);
-
+    const scriptId = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
+    const alreadyLoaded = !!document.getElementById(scriptId);
+    if (alreadyLoaded) {
+      let cancelled = false;
+      const interval = setInterval(() => {
+        if (cancelled) return clearInterval(interval);
+        if (!(window as any).openViasocket) return;
+        clearInterval(interval);
+        (window as any).openViasocket(undefined, { embedToken });
+      }, 50);
+      return () => { cancelled = true; clearInterval(interval); };
+    }
     const script = document.createElement("script");
-    script.id = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
+    script.id = scriptId;
     script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
     script.setAttribute("embedToken", embedToken);
     script.setAttribute("parentId", "viasocketParentId");
     document.body.appendChild(script);
-    embedScriptLoaded.current = true;
-
-    return () => {
-      try {
-        const s = document.getElementById(process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!);
-        if (s?.parentNode === document.body) document.body.removeChild(s);
-        const container = document.getElementById("iframe-viasocket-embed-parent-container");
-        if (container) container.parentNode?.removeChild(container);
-      } catch (e) {
-        console.warn("ClusterView embed cleanup error:", e);
-      }
-      embedScriptLoaded.current = false;
-    };
-  }, [embedToken]);
+  }, [embedToken, cluster.id]);
 
   useEffect(() => {
     async function handleMessage(e: MessageEvent) {
@@ -542,7 +557,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
 
         {/* Embed — always open */}
         <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
-          <div id="viasocketParentId" className="flex-1 min-h-0 w-full" />
+          <div ref={embedSlotRef} className="flex-1 min-h-0 w-full" />
         </div>
 
         {/* Configuration panel */}

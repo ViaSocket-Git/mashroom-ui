@@ -3,7 +3,7 @@
 export const runtime = "edge";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { updateClusterClient, addPowerUp, setClusterSelectedClient, fetchClusters, fetchEmbedToken, updateClusterOnServer, fetchCurrentUser } from "@/lib/features/clustersSlice";
 import { fetchAiClients, type AiClient } from "@/lib/features/aiClientsSlice";
@@ -22,6 +22,7 @@ export default function ClusterPage() {
   const [hasFetched, setHasFetched] = useState(clustersFetched);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
+  const fetchedForId = useRef<string | null>(null);
 
   useEffect(() => {
     if (clustersFetched) { setHasFetched(true); return; }
@@ -45,10 +46,12 @@ export default function ClusterPage() {
 
   useEffect(() => {
     if (!id || !cluster) return;
+    if (fetchedForId.current === id) return;
+    fetchedForId.current = id;
     dispatch(fetchEmbedToken(id)).then(() => {
       dispatch(fetchTools({ mcpServerId: id }));
     });
-  }, [id, cluster?.projectId, dispatch]);
+  }, [id, cluster, dispatch]);
 
   function handleNewCluster() {
     setModalMode("newCluster");

@@ -92,6 +92,12 @@ export const fetchEmbedToken = createAsyncThunk(
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
     }
+  },
+  {
+    condition: (clusterId, { getState }) => {
+      const state = getState() as { clusters: ClustersState };
+      return !state.clusters.embedTokenByClusterId[clusterId];
+    },
   }
 );
 
@@ -177,6 +183,13 @@ const clustersSlice = createSlice({
     },
     removeCluster(state, action: PayloadAction<string>) {
       state.clusters = state.clusters.filter((c) => c.id !== action.payload);
+    },
+    renameCluster(
+      state,
+      action: PayloadAction<{ clusterId: string; name: string }>
+    ) {
+      const cluster = state.clusters.find((c) => c.id === action.payload.clusterId);
+      if (cluster) cluster.name = action.payload.name;
     },
   },
   extraReducers: (builder) => {
@@ -271,7 +284,7 @@ const clustersSlice = createSlice({
   },
 });
 
-export const { updateClusterClient, addPowerUp, setClusterSelectedClient, clearError, removeCluster } =
+export const { updateClusterClient, addPowerUp, setClusterSelectedClient, clearError, removeCluster, renameCluster } =
   clustersSlice.actions;
 
 
