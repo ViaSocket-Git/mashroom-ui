@@ -403,14 +403,19 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
     }
     const slot = embedSlotRef.current;
     if (slot && !slot.contains(persistent)) {
-      persistent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;";
+      persistent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;display:flex;";
       slot.appendChild(persistent);
     }
     return () => {
-      if (persistent && document.body !== persistent.parentElement) {
-        persistent.style.cssText = "display:none;width:100%;height:100%;";
-        document.body.appendChild(persistent);
+      // Park into a zero-size hidden container so the embed script cannot show it
+      let prison = document.getElementById("__viasocket_prison__");
+      if (!prison) {
+        prison = document.createElement("div");
+        prison.id = "__viasocket_prison__";
+        prison.style.cssText = "position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;top:0;left:0;";
+        document.body.appendChild(prison);
       }
+      if (persistent) prison.appendChild(persistent);
     };
   }, []);
 
