@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Search } from "lucide-react";
+import { X, Search, Check } from "lucide-react";
 import { useAppSelector } from "../../lib/hooks";
 import type { AiClient } from "../../lib/features/aiClientsSlice";
+import { submitAiClientRequest } from "../../lib/api/aiClientRequestApi";
 
 interface AIClientModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface AIClientModalProps {
 export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientModalProps) {
   const [search, setSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<AiClient | null>(null);
+  const [requestForm, setRequestForm] = useState({ name: "", description: "" });
+  const [showToast, setShowToast] = useState(false);
   const { clients, loading } = useAppSelector((s) => s.aiClients);
 
   const sorted = [...clients].sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
@@ -22,6 +25,20 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
   );
 
   if (!isOpen) return null;
+
+  async function handleSubmitRequest() {
+    const ok = await submitAiClientRequest({
+      aiClientName: requestForm.name || search,
+      description: requestForm.description,
+      originalSearch: search,
+      timestamp: new Date().toISOString(),
+    });
+    if (ok) {
+      setShowToast(true);
+      setRequestForm({ name: "", description: "" });
+      setTimeout(() => setShowToast(false), 1000);
+    }
+  }
 
   function handleDone() {
     if (selectedClient) {
@@ -73,6 +90,40 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
           {loading && clients.length === 0 ? (
             <div className="flex items-center justify-center h-32" style={{ color: "rgb(148,163,184)", fontFamily: "Geist, sans-serif", fontSize: 14 }}>
               Loading...
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-6">
+              <div style={{ fontFamily: "Geist, sans-serif", fontSize: 17, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.01em", textAlign: "center" }}>
+                AI NOT FOUND? WE&apos;LL BUILD IT.
+              </div>
+              <div className="flex flex-col gap-3 w-full max-w-sm">
+                <input
+                  type="text"
+                  placeholder="AI Client Name"
+                  value={requestForm.name}
+                  onChange={(e) => setRequestForm((p) => ({ ...p, name: e.target.value }))}
+                  className="w-full px-4 py-2.5 outline-none"
+                  style={{ border: "1px solid rgb(226,232,240)", borderRadius: 4, fontFamily: '"DM Sans", sans-serif', fontSize: 14, color: "rgb(10,10,10)", background: "rgb(248,250,252)" }}
+                />
+                <textarea
+                  placeholder="Additional Description (Optional)"
+                  value={requestForm.description}
+                  onChange={(e) => setRequestForm((p) => ({ ...p, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-4 py-2.5 outline-none resize-none"
+                  style={{ border: "1px solid rgb(226,232,240)", borderRadius: 4, fontFamily: '"DM Sans", sans-serif', fontSize: 14, color: "rgb(10,10,10)", background: "rgb(248,250,252)" }}
+                />
+                <button
+                  onClick={handleSubmitRequest}
+                  className="w-full py-2.5 font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "rgb(10,10,10)", color: "#fff", border: "none", borderRadius: 4, fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", cursor: "pointer" }}
+                >
+                  Request for AI Client
+                </button>
+                <div style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(148,163,184)", textAlign: "center" }}>
+                  We&apos;ll deliver your app within 6hr
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5">
@@ -147,6 +198,18 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
           </button>
         </div>
+
+        {showToast && (
+          <div
+            className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2.5 rounded-lg z-[9999999]"
+            style={{ background: "rgb(220,252,231)", border: "1px solid rgb(187,247,208)", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", whiteSpace: "nowrap" }}
+          >
+            <Check width={15} height={15} stroke="rgb(22,163,74)" strokeWidth={2.5} />
+            <span style={{ fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600, color: "rgb(22,163,74)" }}>
+              Request Sent!
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
