@@ -207,6 +207,9 @@ const clustersSlice = createSlice({
           const selectedClient = aiClients.find(
             (a) => a.title.toLowerCase() === clientTitle.toLowerCase()
           ) ?? null;
+          if (selectedClient) {
+            state.selectedClientByClusterId[c._id] = selectedClient;
+          }
           return {
             id: c._id,
             name: c.name || `Cluster ${i + 1}`,

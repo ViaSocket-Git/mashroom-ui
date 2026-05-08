@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const AI_CLIENTS_URL = "https://flow.sokt.io/func/scriTg56Y2oZ";
+const AI_CLIENTS_URL = "https://table-api.viasocket.com/69cfa010be357bedcfc5318e/tblnxdfjj";
 
 export interface AiClient {
   id: string;
@@ -12,6 +12,8 @@ export interface AiClient {
   color: string;
   popular?: boolean;
   className?: string;
+  videoUrl?: string;
+  videoUrlDesktop?: string;
 }
 
 interface AiClientsState {
@@ -30,8 +32,26 @@ export const fetchAiClients = createAsyncThunk(
   "aiClients/fetchAiClients",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(AI_CLIENTS_URL);
-      return (res.data?.result ?? []) as AiClient[];
+      const res = await axios.get(AI_CLIENTS_URL, {
+        headers: { "auth-key": "key4NVEae1SgtnQ" },
+      });
+      const rows = res.data?.data?.rows ?? [];
+      const transformed: AiClient[] = rows.map((row: any) => {
+        const name = (row.name ?? "").trim().replace(/\n+$/, "");
+        const popularFlag = row.popular === "true";
+        return {
+          id: row.rowid,
+          title: name,
+          link: "",
+          icon: "",
+          configType: row.config_type ?? "url",
+          color: "#D97757",
+          popular: popularFlag,
+          className: "",
+          videoUrl: row.setup_video || undefined,
+        };
+      });
+      return transformed;
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { X, Copy, Check, User } from "lucide-react";
+import { X, Copy, Check, User, Play } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
@@ -29,6 +29,8 @@ interface AiClient {
   title: string;
   icon: string;
   color: string;
+  videoUrl?: string;
+  videoUrlDesktop?: string;
 }
 
 interface Cluster {
@@ -272,11 +274,14 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
 
 function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: Cluster; onChangeClient: () => void; hasTools: boolean }) {
   const [expanded, setExpanded] = useState(hasTools);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     if (hasTools) setExpanded(true);
   }, [hasTools]);
   const selectedClient = useAppSelector((s) => s.clusters.selectedClientByClusterId[cluster.id]);
+  const videoSrc = selectedClient?.videoUrlDesktop || selectedClient?.videoUrl;
+
   const mcpUrl = cluster.url;
   const configJsonByType = {
     url: { mcpServers: { mushrooms: { url: mcpUrl, transport: "sse" } } },
@@ -372,8 +377,52 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
               </div>
             ))}
           </div>
+          {videoSrc && (
+            <button
+              data-testid="watch-setup-video"
+              onClick={() => setShowVideo(true)}
+              className="flex items-center gap-2 cursor-pointer"
+              style={{
+                marginTop: 18,
+                alignSelf: "flex-start",
+                padding: "8px 14px",
+                background: "rgb(10,10,10)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                fontFamily: "Geist, sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              <Play width={12} height={12} />
+              Watch setup video
+            </button>
+          )}
         </div>
       </div>}
+      {showVideo && videoSrc && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center"
+          style={{ backdropFilter: "blur(4px)", background: "rgba(255,255,255,0.3)", padding: "0 50px" }}
+          onClick={() => setShowVideo(false)}
+        >
+          <button
+            data-testid="watch-video-close"
+            onClick={() => setShowVideo(false)}
+            className="absolute cursor-pointer flex items-center justify-center"
+            style={{ top: 20, right: 60, width: 40, height: 40, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", zIndex: 2 }}
+          >
+            <X width={20} height={20} strokeWidth={2.2} />
+          </button>
+          {/\.(mp4|webm|ogg)(\?|$)/i.test(videoSrc) ? (
+            <video src={videoSrc} controls autoPlay style={{ width: "100%", height: "100%", objectFit: "contain", background: "transparent" }} />
+          ) : (
+            <iframe src={videoSrc} title="Setup video" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen style={{ width: "100%", height: "100%", border: "none", background: "transparent" }} />
+          )}
+        </div>
+      )}
     </>
   );
 }
