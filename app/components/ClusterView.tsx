@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { X, Copy, Check, User, Play } from "lucide-react";
+import { X, Copy, Check, User, Play, Menu } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
@@ -49,6 +49,7 @@ interface ClusterViewProps {
   onAddPowerUp: () => void;
   onChangeClient: () => void;
   hideSidebar?: boolean;
+  onMenuClick?: () => void;
 }
 
 function ClientIcon({ clientId, color }: { clientId: string; color: string }) {
@@ -175,7 +176,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
         <div className="flex flex-col px-7 pt-6 pb-5 gap-5">
 
           {/* Top two-column row */}
-          <div className="flex gap-6">
+          <div className="flex flex-col md:flex-row gap-6">
 
             {/* Left: MCP URL + JSON config */}
             <div className="flex-1 flex flex-col gap-5 min-w-0">
@@ -205,7 +206,7 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
             </div>
 
             {/* Right: setup steps */}
-            <div className="shrink-0 flex flex-col" style={{ width: 230 }}>
+            <div className="shrink-0 flex flex-col w-full md:w-[230px]">
               <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif", textTransform: "uppercase" }}>Setup Steps</p>
               <div className="flex flex-col" style={{ border: "1.5px solid rgb(220,225,234)", borderRadius: 10, overflow: "hidden" }}>
                 {steps.map((step, i) => (
@@ -318,9 +319,9 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
       </div>
 
       {/* Body — two columns */}
-      {expanded && <div className="flex flex-1 min-h-0 overflow-hidden">
+      {expanded && <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
         {/* Left 60%: URL + JSON */}
-        <div className="flex flex-col overflow-y-auto" style={{ flex: "0 0 60%", borderRight: "1px solid rgb(226,232,240)", padding: "14px 16px 16px" }}>
+        <div className="flex flex-col overflow-y-auto md:border-r border-b md:border-b-0" style={{ flex: "1 1 60%", borderColor: "rgb(226,232,240)", padding: "14px 16px 16px" }}>
           <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 6 }}>MCP Endpoint URL</span>
           <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid rgb(226,232,240)" }}>
             <input
@@ -351,7 +352,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
         </div>
 
         {/* Right 40%: How to connect */}
-        <div className="flex flex-col overflow-y-auto" style={{ flex: "0 0 40%", padding: "14px 20px 16px" }}>
+        <div className="flex flex-col overflow-y-auto" style={{ flex: "1 1 40%", padding: "14px 20px 16px" }}>
           <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, display: "block" }}>How to connect</span>
           <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, gap: 24 }}>
             {steps.map((step, i) => (
@@ -427,7 +428,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
   );
 }
 
-export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar }: ClusterViewProps) {
+export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar, onMenuClick }: ClusterViewProps) {
   const dispatch = useAppDispatch();
   const [showAccount, setShowAccount] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -543,7 +544,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
       {/* Header */}
       <div className="shrink-0">
         {hideSidebar ? (
-          <div className="px-6 w-full flex items-center justify-between">
+          <div className="px-4 sm:px-6 w-full flex items-center justify-between">
             <a className="flex items-center gap-2.5 no-underline h-16" href="/">
               <div className="w-8 h-8 flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -576,9 +577,20 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             </div>
           </div>
         ) : (
-          <div className="w-full px-6 " style={{ background: "transparent" }}>
-            <div className="flex items-center justify-between h-16 w-full">
-              <div className="flex items-center gap-2.5">
+          <div className="w-full px-4 sm:px-6 " style={{ background: "transparent" }}>
+            <div className="flex items-center justify-between h-16 w-full gap-2">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                {onMenuClick && (
+                  <button
+                    data-testid="cluster-menu-toggle"
+                    onClick={onMenuClick}
+                    aria-label="Open menu"
+                    className="md:hidden flex items-center justify-center cursor-pointer shrink-0"
+                    style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgb(226,232,240)", background: "#fff", color: "rgb(10,10,10)" }}
+                  >
+                    <Menu width={18} height={18} strokeWidth={2} />
+                  </button>
+                )}
                 {cluster.selectedClient?.icon ? (
                   <div style={{ width: 24, height: 24, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
                     <img src={cluster.selectedClient.icon} alt={cluster.selectedClient.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -586,7 +598,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
                 ) : (
                   <ClientIcon clientId={cluster.client} color={cluster.clientColor} />
                 )}
-                <h2 style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>
+                <h2 className="truncate" style={{ fontFamily: "Geist, sans-serif", color: "rgb(10,10,10)", margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em" }}>
                   {cluster.name}
                 </h2>
               </div>
@@ -607,7 +619,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
       </div>
 
       {/* Content — stacked full width */}
-      <div className="flex-1 min-h-0 px-6 md:px-16 lg:px-24 max-w-[1400px] min-w-[320px] md:min-w-[800px] lg:min-w-[1000px] mx-auto w-full pt-4 flex flex-col gap-2 h-full overflow-hidden">
+      <div className="flex-1 min-h-0 px-3 sm:px-6 md:px-16 lg:px-24 max-w-[1400px] mx-auto w-full pt-3 sm:pt-4 flex flex-col gap-2 h-full overflow-hidden">
 
         {/* Embed — always open */}
         <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>

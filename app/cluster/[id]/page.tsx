@@ -22,6 +22,7 @@ export default function ClusterPage() {
   const [hasFetched, setHasFetched] = useState(clustersFetched);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const fetchedForId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -138,16 +139,19 @@ export default function ClusterPage() {
           }}
           onNewCluster={handleNewCluster}
           onChangeClient={(clusterId) => handleChangeClient(clusterId)}
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
         />
       )}
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden min-w-0">
         {cluster ? (
           <ClusterView
             cluster={cluster}
             onAddPowerUp={handleAddPowerUp}
             onChangeClient={handleChangeClient}
             hideSidebar={hideSidebar}
+            onMenuClick={hideSidebar ? undefined : () => setMobileMenuOpen(true)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm">

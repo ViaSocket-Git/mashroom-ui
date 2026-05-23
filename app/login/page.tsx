@@ -119,17 +119,14 @@ function LoginPageInner({ loading }: { loading: boolean }) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "row", background: "#2ebd85" }}>
-      {/* Left — 60% green panel */}
+    <div className="flex-col md:flex-row" style={{ minHeight: "100vh", width: "100%", display: "flex", background: "#f0ece4" }}>
+      {/* Left — green panel (hidden on mobile) */}
       <div
+        className="hidden md:flex md:flex-col md:flex-[0_0_60%] md:px-[52px] md:py-[48px]"
         style={{
-          flex: "0 0 60%",
           background: "#2ebd85",
-          padding: "48px 52px 40px",
           position: "relative",
           overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
         }}
       >
         {/* Dot grid pattern */}
@@ -152,27 +149,25 @@ function LoginPageInner({ loading }: { loading: boolean }) {
             <p style={{ fontFamily: HEADING_FONT, fontWeight: 700, fontSize: "clamp(22px, 3vw, 36px)", color: "#0a0a0a", lineHeight: 1.25, margin: 0, letterSpacing: "0.02em" }}>TO EVERYTHING</p>
           </div>
 
-          {/* Steps — 2-col grid, 03 full width */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {/* Steps — 2-col grid on md+, single column on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {steps.slice(0, 2).map((s) => (
               <StepCard key={s.num} step={s} />
             ))}
-            <div style={{ gridColumn: "1 / -1" }}>
+            <div className="md:col-span-2">
               <StepCard step={steps[2]} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right — 40% beige panel */}
+      {/* Right — beige panel */}
       <div
-        className="flex flex-col"
+        className="flex flex-col w-full min-h-screen md:min-h-0 md:flex-[1_1_40%] md:rounded-l-[24px]"
         style={{
-          flex: "1 1 40%",
           minWidth: 0,
           background: "#f0ece4",
           position: "relative",
-          borderRadius: "24px 0 0 24px",
           overflow: "hidden",
         }}
       >
@@ -191,7 +186,7 @@ function LoginPageInner({ loading }: { loading: boolean }) {
           </div>
 
           {/* Center — heading + auth */}
-          <div className="flex-1 flex flex-col items-center justify-center" style={{ padding: "0 44px" }}>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 md:px-11 md:py-0">
             <div style={{ width: "100%", maxWidth: 340 }}>
               <h2 style={{
                 fontFamily: HEADING_FONT,
