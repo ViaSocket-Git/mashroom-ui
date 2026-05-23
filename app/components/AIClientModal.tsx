@@ -154,14 +154,16 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
                   }}
                 >
                   <div style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <img
-                      src={client.icon}
-                      alt={client.title}
-                      width={28}
-                      height={28}
-                      className={client.className}
-                      style={{ objectFit: "contain", maxWidth: 28, maxHeight: 28 }}
-                    />
+                    {client.icon ? (
+                      <img
+                        src={client.icon}
+                        alt={client.title}
+                        width={28}
+                        height={28}
+                        className={client.className}
+                        style={{ objectFit: "contain", maxWidth: 28, maxHeight: 28 }}
+                      />
+                    ) : null}
                   </div>
                   <div className="flex-1 min-w-0">
                     <span style={{ color: "rgb(74,85,104)", fontFamily: '"DM Sans", sans-serif', fontSize: 14 }}>{client.title}</span>
