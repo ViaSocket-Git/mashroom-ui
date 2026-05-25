@@ -1,5 +1,4 @@
 import axiosInstance from "./axiosInstance";
-import type { Tool } from "../features/toolsSlice";
 
 const TOOL_API_URL = `${process.env.NEXT_PUBLIC_SERVER_URL}/api/tool`;
 const MCP_URL = `${process.env.NEXT_PUBLIC_SERVER_URL}/api`;
@@ -31,16 +30,12 @@ export interface McpToolPayload {
   serviceIcons?: string[];
 }
 
-interface ToolApiResponse {
-  data: Tool;
-}
-
 export const toolApi = {
   getTools: (mcpServerId: string) =>
     axiosInstance.get<ApiToolsResponse>(`${MCP_URL}/tools/${mcpServerId}`),
 
   callTool: (data: McpToolPayload) =>
-    axiosInstance.post<ToolApiResponse>(TOOL_API_URL, data),
+    axiosInstance.post<unknown>(TOOL_API_URL, data),
 
   deleteTool: (flowId: string) =>
     axiosInstance.delete(`${TOOL_API_URL}/${flowId}`),

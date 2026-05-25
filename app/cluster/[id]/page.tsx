@@ -39,8 +39,8 @@ export default function ClusterPage() {
   const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
 
   const clusters = useAppSelector((s) => s.clusters.clusters);
-  const tools = useAppSelector((s) => s.tools.byMcpServerId[id] ?? []);
-  const hideSidebar = clusters.length === 1 && tools.length === 0;
+  const toolCount = useAppSelector((s) => s.tools.countByMcpServerId[id] ?? 0);
+  const hideSidebar = clusters.length === 1 && toolCount === 0;
 
   const cluster = clusters.find((c) => c.id === id) ?? null;
 

@@ -5,7 +5,7 @@ import { X, Copy, Check, User, Play } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
-import { removeTool, upsertTool } from "../../lib/features/toolsSlice";
+import { fetchTools } from "../../lib/features/toolsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
 
@@ -433,8 +433,8 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   const accountRef = useRef<HTMLDivElement>(null);
 
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
-  const tools = useAppSelector((s) => s.tools.byMcpServerId[cluster.id] ?? []);
-  const hasTools = tools.length > 0;
+  const toolCount = useAppSelector((s) => s.tools.countByMcpServerId[cluster.id] ?? 0);
+  const hasTools = toolCount > 0;
   const embedSlotRef = useRef<HTMLDivElement>(null);
 
   // Keep a single persistent #viasocketParentId div alive in document.body.
@@ -499,13 +499,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
         const flowId = (e.data.id as string) ?? "";
         try {
           await toolApi.deleteTool(flowId);
-          dispatch(removeTool({ mcpServerId: cluster.id, toolId: flowId }));
+          dispatch(fetchTools({ mcpServerId: cluster.id }));
         } catch (err) {
           console.error("[ClusterView] delete tool error:", err);
         }
       } else if (action === "published" || action === "paused" || action === "created" || action === "updated") {
         try {
-          const res = await toolApi.callTool({
+          await toolApi.callTool({
             flowId: (e.data.id as string) ?? "",
             payload:  e.data.mcpToolJson,
             desc: (e.data.description as string) || (e.data.title as string) || "",
@@ -513,12 +513,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             title: (e.data.title as string) ?? "",
             mcpServerId: cluster.id,
           });
-          if (res.data?.data) {
-            dispatch(upsertTool({
-              ...res.data.data,
-              serviceIcons: (e.data.serviceIcons as string[]) ?? res.data.data.serviceIcons ?? [],
-            }));
-          }
+          dispatch(fetchTools({ mcpServerId: cluster.id }));
         } catch (err) {
           console.error("[ClusterView] MCP tool API error:", err);
         }
