@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import AccountPanel from "./AccountPanel";
 import ClusterView from "./ClusterView";
@@ -94,6 +95,7 @@ export default function MashroomApp() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   function handleNewCluster() {
     trackEvent('new_cluster_button_clicked');
@@ -187,10 +189,12 @@ export default function MashroomApp() {
           }}
           onNewCluster={handleNewCluster}
           onChangeClient={(clusterId) => handleChangeClient(clusterId)}
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
         />
       )}
 
-      <main className="flex-1 relative overflow-hidden flex flex-col">
+      <main className="flex-1 relative overflow-hidden flex flex-col min-w-0">
         {!hasFetched && (
           <div className="absolute top-4 right-4 z-10 text-xs px-3 py-1.5 rounded" style={{ background: "rgb(243,244,246)", color: "rgb(100,116,139)", fontFamily: "Geist, sans-serif" }}>
             Creating cluster…
@@ -199,9 +203,20 @@ export default function MashroomApp() {
         <div className="flex flex-col h-full" style={{ background: "rgb(248,249,251)" }}>
             {/* Header */}
             <div className="shrink-0">
-              <div className="w-full px-6" style={{ background: "transparent" }}>
-                <div className="flex items-center justify-between h-16 w-full">
-                  <a className="flex items-center gap-2.5 no-underline" href="/">
+              <div className="w-full px-4 sm:px-6" style={{ background: "transparent" }}>
+                <div className="flex items-center justify-between h-16 w-full gap-2">
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                  {clusters.length > 0 && (
+                    <button
+                      onClick={() => setMobileMenuOpen(true)}
+                      aria-label="Open menu"
+                      className="md:hidden flex items-center justify-center cursor-pointer shrink-0"
+                      style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgb(226,232,240)", background: "#fff", color: "rgb(10,10,10)" }}
+                    >
+                      <Menu width={18} height={18} strokeWidth={2} />
+                    </button>
+                  )}
+                  <a className="flex items-center gap-2.5 no-underline min-w-0" href="/">
                     <div className="w-8 h-8 flex items-center justify-center">
                       <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 38C4 18 16 4 32 4C48 4 60 18 60 38H4Z" fill="#0a0a0a" />
@@ -215,17 +230,18 @@ export default function MashroomApp() {
                         <line x1="32" y1="16" x2="46" y2="26" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
                       </svg>
                     </div>
-                    <div className="flex flex-col">
-                      <span style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate" style={{ color: "rgb(10,10,10)", fontFamily: "Geist, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>Mushrooms</span>
                       <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
                     </div>
                   </a>
+                  </div>
                   <EmptyAccountButton />
                 </div>
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="flex flex-col items-center gap-5">
+            <div className="flex-1 flex flex-col items-center justify-center px-4">
+            <div className="flex flex-col items-center gap-5 w-full max-w-3xl">
               {/* Mushroom icon */}
               <div className="w-14 h-14 flex items-center justify-center rounded-full" style={{ background: "rgb(240,241,243)", border: "1px solid rgb(208,212,219)" }}>
                 <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
@@ -236,7 +252,7 @@ export default function MashroomApp() {
               </div>
 
               {/* Heading */}
-              <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 800, fontSize: 28, color: "rgb(10,10,10)", letterSpacing: "-0.03em", margin: 0, textAlign: "center" }}>
+              <p style={{ fontFamily: "Geist, sans-serif", fontWeight: 800, fontSize: "clamp(22px, 6vw, 28px)", color: "rgb(10,10,10)", letterSpacing: "-0.03em", margin: 0, textAlign: "center" }}>
                 Power up your AI
               </p>
 
@@ -252,19 +268,19 @@ export default function MashroomApp() {
               </button>
 
               {/* Steps */}
-              <div className="flex items-center gap-6 mt-2">
+              <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-2 w-full">
                 {[
                   { step: "STEP 1", label: "Pick your power-ups" },
                   { step: "STEP 2", label: "Your AI absorbs them" },
                   { step: "STEP 3", label: "Actions on autopilot" },
                 ].map(({ step, label }, i) => (
-                  <div key={step} className="flex items-center gap-3">
-                    <div className="flex flex-col items-center text-center" style={{ minWidth: 160 }}>
+                  <div key={step} className="flex md:flex-row flex-col items-center gap-2 md:gap-3">
+                    <div className="flex flex-col items-center text-center md:min-w-[160px]">
                       <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 12, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{step}</span>
-                      <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 20, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{label}</span>
+                      <span style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 18, fontWeight: 700, color: "rgb(10,10,10)", letterSpacing: "-0.01em" }}>{label}</span>
                     </div>
                     {i < 2 && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(196,201,212)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                      <svg className="hidden md:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(196,201,212)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                     )}
                   </div>
                 ))}

@@ -40,7 +40,7 @@ function Hero() {
     <div className="animate-fade-in pb-6 text-center">
       <h1
         className="font-[Geist,sans-serif] font-bold text-[#0a0a0a] mb-4"
-        style={{ fontSize: 52, letterSpacing: "-2px", lineHeight: 1.08 }}
+        style={{ fontSize: "clamp(28px, 7vw, 52px)", letterSpacing: "-2px", lineHeight: 1.08 }}
       >
         Bring{" "}
         <em style={{ fontStyle: "normal", color: "#5CD2A2" }}>2,000+ power-ups</em>
@@ -77,8 +77,8 @@ function AICards() {
     <div className="pt-11" style={{ animationDelay: "70ms" }}>
       {/* Hero card */}
       <div
-        className="rounded-t-lg overflow-hidden relative"
-        style={{ background: "#0a0a0e", padding: "36px 36px 32px" }}
+        className="rounded-t-lg overflow-hidden relative px-6 py-8 sm:px-9 sm:py-9"
+        style={{ background: "#0a0a0e" }}
       >
         {/* Orb */}
         <div
@@ -93,7 +93,7 @@ function AICards() {
         </div>
         <div
           className="relative z-10 text-white font-[Geist,sans-serif] font-bold"
-          style={{ fontSize: 32, letterSpacing: "-0.8px", lineHeight: 1.15, maxWidth: 520 }}
+          style={{ fontSize: "clamp(22px, 5vw, 32px)", letterSpacing: "-0.8px", lineHeight: 1.15, maxWidth: 520 }}
         >
           Your AI can think.<br />
           <span style={{ color: "#5CD2A2" }}>Now</span> it can act.
@@ -101,7 +101,7 @@ function AICards() {
       </div>
 
       {/* Sub cards row */}
-      <div className="flex gap-px rounded-b-lg overflow-hidden" style={{ background: "#e2e8f0" }}>
+      <div className="flex flex-col sm:flex-row gap-px rounded-b-lg overflow-hidden" style={{ background: "#e2e8f0" }}>
         {[
           {
             bg: "#1a0a3e",
@@ -168,7 +168,7 @@ function BentoGrid() {
         style={{ background: "#e2e8f0" }}
       >
         {/* Row 1 */}
-        <div className="flex gap-px">
+        <div className="flex flex-col sm:flex-row gap-px">
           <BentoCard className="flex-[2]" style={{ background: "#111111" } as React.CSSProperties}>
             <div>
               <BentoTitle light>Setup</BentoTitle>
@@ -212,7 +212,7 @@ function BentoGrid() {
         </div>
 
         {/* Row 2 */}
-        <div className="flex gap-px">
+        <div className="flex flex-col sm:flex-row gap-px">
           <BentoCard className="flex-1" style={{ background: "#0a1628" } as React.CSSProperties}>
             <div>
               <BentoTitle light>Configuration</BentoTitle>
@@ -264,7 +264,7 @@ function BentoGrid() {
         </div>
 
         {/* Row 3 */}
-        <div className="flex gap-px">
+        <div className="flex flex-col sm:flex-row gap-px">
           <BentoCard
             className="flex-1 rounded-bl-[9px]"
             style={{
@@ -360,7 +360,7 @@ export function EmbedPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: "#f8f9fb" }}>
       <EmbedTopBar />
-      <div className="flex-1 overflow-y-auto py-8 px-7 pb-20 flex flex-col items-center">
+      <div className="flex-1 overflow-y-auto py-6 px-4 sm:py-8 sm:px-7 pb-20 flex flex-col items-center">
         <div className="w-full" style={{ maxWidth: 860 }}>
           <Hero />
           <AICards />

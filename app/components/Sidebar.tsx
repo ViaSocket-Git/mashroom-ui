@@ -35,6 +35,8 @@ interface SidebarProps {
   onNewCluster: () => void;
   onChangeClient: (clusterId: string) => void;
   onDeleteCluster?: (clusterId: string) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 function ClusterIcon({ cluster, active }: { cluster: Cluster; active: boolean }) {
@@ -81,6 +83,8 @@ export default function Sidebar({
   onNewCluster,
   onChangeClient,
   onDeleteCluster,
+  mobileOpen = false,
+  onMobileClose,
 }: SidebarProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -131,11 +135,27 @@ export default function Sidebar({
     if (clustersLoading) setHasFetched(false);
   }, [clustersLoading, clusters.length]);
 
+  function handleSelect(id: string) {
+    onSelectCluster(id);
+    onMobileClose?.();
+  }
+
+  function handleNewClusterMobile() {
+    onNewCluster();
+    onMobileClose?.();
+  }
+
   return (
     <>
+    {/* Mobile backdrop */}
+    <div
+      onClick={onMobileClose}
+      className={`md:hidden fixed inset-0 transition-opacity ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      style={{ background: "rgba(0,0,0,0.4)", zIndex: 2147483646 }}
+    />
     <aside
-      className="shrink-0 h-screen sticky top-0 flex flex-col border-r"
-      style={{ width: 260, background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)" }}
+      className={`shrink-0 h-screen flex flex-col border-r transition-transform duration-200 fixed md:sticky top-0 left-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      style={{ width: 260, maxWidth: "85vw", background: "rgb(255,255,255)", borderColor: "rgb(226,232,240)", zIndex: mobileOpen ? 2147483647 : undefined }}
     >
       {/* Logo */}
       <div className="px-5 flex items-center gap-3 border-b" style={{ borderColor: "rgb(226,232,240)" }}>
@@ -165,7 +185,7 @@ export default function Sidebar({
         <div className="mb-4">
           <button
             data-testid="sidebar-new-cluster"
-            onClick={onNewCluster}
+            onClick={handleNewClusterMobile}
             className="flex items-center gap-2 cursor-pointer w-full justify-center"
             style={{
               background: "rgb(255,255,255)",
@@ -241,7 +261,7 @@ export default function Sidebar({
                 ) : (
                   <button
                     data-testid={`sidebar-cluster-${cluster.id}`}
-                    onClick={() => onSelectCluster(cluster.id)}
+                    onClick={() => handleSelect(cluster.id)}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-left text-sm w-full transition-all"
                     style={{
                       borderRadius: 4,

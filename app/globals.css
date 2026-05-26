@@ -180,3 +180,16 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* Mobile responsiveness: avoid horizontal scroll from any fixed-width children */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  /* Hide hover-only ghost buttons on touch where they have no purpose */
+  .group\/cluster .opacity-0 {
+    opacity: 1 !important;
+  }
+}

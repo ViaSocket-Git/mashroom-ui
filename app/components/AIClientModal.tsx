@@ -48,7 +48,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
   }
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-0">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setSelectedClient(null); onClose(); }} />
       <div
         className="relative w-full max-w-[720px] overflow-hidden flex flex-col z-[9999999]"
@@ -126,7 +126,7 @@ export default function AIClientModal({ isOpen, onClose, onSelect }: AIClientMod
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
               {filtered.map((client) => {
                 const isSelected = selectedClient?.id === client.id;
                 return (
