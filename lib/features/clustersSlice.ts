@@ -32,6 +32,7 @@ interface ClustersState {
   error: string | null;
   selectedClientByClusterId: Record<string, AiClient>;
   embedTokenByClusterId: Record<string, string>;
+  chatbotEmbedToken: string | null;
   userId: string | null;
   userName: string;
   userEmail: string;
@@ -46,6 +47,7 @@ const initialState: ClustersState = {
   error: null,
   selectedClientByClusterId: {},
   embedTokenByClusterId: {},
+  chatbotEmbedToken: null,
   userId: null,
   userName: "",
   userEmail: "",
@@ -76,7 +78,7 @@ export const fetchClusters = createAsyncThunk(
       const state = getState() as { clusters: ClustersState; aiClients: { clients: AiClient[] } };
       const userId = state.clusters.userId ?? "";
       const res = await mcpApi.getClusters(userId);
-      return { clusters: res.data.data as ApiCluster[], aiClients: state.aiClients.clients };
+      return { clusters: res.data.data as ApiCluster[], chatbotEmbedToken: res.data.chatbotEmbedToken ?? null, aiClients: state.aiClients.clients };
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
     }
@@ -201,7 +203,8 @@ const clustersSlice = createSlice({
       .addCase(fetchClusters.fulfilled, (state, action) => {
         state.loading = false;
         state.clustersFetched = true;
-        const { clusters, aiClients } = action.payload;
+        const { clusters, aiClients, chatbotEmbedToken } = action.payload;
+        state.chatbotEmbedToken = chatbotEmbedToken;
         state.clusters = clusters.map((c, i) => {
           const clientTitle = c.client ?? "";
           const selectedClient = aiClients.find(

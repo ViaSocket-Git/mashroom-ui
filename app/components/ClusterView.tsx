@@ -1,13 +1,42 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { X, Copy, Check, User, Play, Menu } from "lucide-react";
+import { X, Copy, Check, User, Play, Menu, MessageSquare } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchTools } from "../../lib/features/toolsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
+import { Group, Panel, Separator } from "react-resizable-panels";
+
+import { CHATBOT_PARENT_ID } from "./ChatbotLoader";
+import { VIASOCKET_PARENT_ID } from "./EmbedLoader";
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === "undefined" ? true : window.matchMedia("(min-width: 768px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
+function updateChatbotThread(threadId: string) {
+  const tryUpdate = (attempts = 0) => {
+    const cb = (window as any).Chatbot;
+    if (cb && typeof cb.sendData === "function") {
+      cb.sendData({ threadId});
+    } else if (attempts < 40) {
+      setTimeout(() => tryUpdate(attempts + 1), 100);
+    }
+  };
+  tryUpdate();
+}
 
 interface ReplacedField {
   type: string
@@ -273,6 +302,79 @@ function ClusterConfigModal({ cluster, onClose }: { cluster: Cluster; onClose: (
   );
 }
 
+function SetupGuide({ cluster }: { cluster: Cluster }) {
+  const [showVideo, setShowVideo] = useState(false);
+  const selectedClient = useAppSelector((s) => s.clusters.selectedClientByClusterId[cluster.id]);
+  const videoSrc = selectedClient?.videoUrlDesktop || selectedClient?.videoUrl;
+
+  const steps = [
+    { num: 1, title: "Add your power-ups", desc: "Pick apps and the specific actions your AI can perform." },
+    { num: 2, title: "Copy the url/config", desc: "Paste it into your AI client's settings file." },
+    { num: 3, title: "Ask your AI to act", desc: "Then just ask in plain language.", quote: "\"Send a Slack message to the team about tomorrow's standup\"" },
+  ];
+
+  return (
+    <div className="flex flex-col overflow-y-auto h-full w-full" style={{ padding: "14px 20px 16px" }}>
+      <span style={{ fontFamily: "Geist, sans-serif", fontSize: 10, fontWeight: 600, color: "rgb(148,163,184)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, display: "block" }}>How to connect</span>
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", flex: 1, gap: 24 }}>
+        {steps.map((step, i) => (
+          <div key={step.num} className="flex gap-3 items-start" style={{ position: "relative" }}>
+            <div className="flex flex-col items-center shrink-0" style={{ position: "relative", width: 22 }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgb(10,10,10)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+                <span style={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, fontWeight: 700, color: "#fff" }}>{step.num}</span>
+              </div>
+              {i < steps.length - 1 && (
+                <div style={{ position: "absolute", left: 10.25, top: 22, bottom: -24, width: 1.5, background: "rgb(226,232,240)", borderRadius: 2 }} />
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "Geist, sans-serif", fontSize: 13, fontWeight: 600, color: "rgb(10,10,10)", margin: "0 0 3px", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{step.title}</p>
+              <p style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", margin: 0, lineHeight: 1.5 }}>{step.desc}</p>
+              {step.quote && (
+                <div style={{ paddingLeft: 9, marginTop: 8 }}>
+                  <em style={{ fontFamily: '"DM Sans", sans-serif', fontSize: 12, color: "rgb(100,116,139)", lineHeight: 1.5 }}>{step.quote}</em>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {videoSrc && (
+        <button
+          data-testid="watch-setup-video"
+          onClick={() => setShowVideo(true)}
+          className="flex items-center gap-2 cursor-pointer"
+          style={{ marginTop: 18, alignSelf: "flex-start", padding: "8px 14px", background: "rgb(10,10,10)", color: "#fff", border: "none", borderRadius: 6, fontFamily: "Geist, sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em" }}
+        >
+          <Play width={12} height={12} />
+          Watch setup video
+        </button>
+      )}
+      {showVideo && videoSrc && (
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center"
+          style={{ backdropFilter: "blur(4px)", background: "rgba(255,255,255,0.3)", padding: "0 50px" }}
+          onClick={() => setShowVideo(false)}
+        >
+          <button
+            data-testid="watch-video-close"
+            onClick={() => setShowVideo(false)}
+            className="absolute cursor-pointer flex items-center justify-center"
+            style={{ top: 20, right: 60, width: 40, height: 40, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", zIndex: 2 }}
+          >
+            <X width={20} height={20} strokeWidth={2.2} />
+          </button>
+          {/\.(mp4|webm|ogg)(\?|$)/i.test(videoSrc) ? (
+            <video src={videoSrc} controls autoPlay style={{ width: "100%", height: "100%", objectFit: "contain", background: "transparent" }} />
+          ) : (
+            <iframe src={videoSrc} title="Setup video" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen style={{ width: "100%", height: "100%", border: "none", background: "transparent" }} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: Cluster; onChangeClient: () => void; hasTools: boolean }) {
   const [expanded, setExpanded] = useState(hasTools);
   const [showVideo, setShowVideo] = useState(false);
@@ -431,65 +533,45 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar, onMenuClick }: ClusterViewProps) {
   const dispatch = useAppDispatch();
   const [showAccount, setShowAccount] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"mushrooms" | "testing">("mushrooms");
+  const showChatbotMobile = mobileTab === "testing";
+  const isDesktop = useIsDesktop();
   const accountRef = useRef<HTMLDivElement>(null);
+  const chatbotSlotRef = useRef<HTMLDivElement>(null);
 
   const embedToken = useAppSelector((s) => s.clusters.embedTokenByClusterId[cluster.id] ?? null);
   const toolCount = useAppSelector((s) => s.tools.countByMcpServerId[cluster.id] ?? 0);
+  const publishedToolCount = useAppSelector((s) => s.tools.publishedCountByMcpServerId[cluster.id] ?? 0);
   const hasTools = toolCount > 0;
+  const hasPublishedTools = publishedToolCount > 0;
   const embedSlotRef = useRef<HTMLDivElement>(null);
 
-  // Keep a single persistent #viasocketParentId div alive in document.body.
-  // On mount: move it into the visible slot. On unmount: park it back in body (hidden).
-  // This way the embed script's DOM is never destroyed across cluster/route changes.
   useLayoutEffect(() => {
-    // Ensure a single persistent #viasocketParentId div exists and move it into the slot.
-    // It lives in document.body between mounts so the embed script's DOM is never destroyed.
-    let persistent = document.getElementById("viasocketParentId") as HTMLDivElement | null;
-    if (!persistent) {
-      persistent = document.createElement("div");
-      persistent.id = "viasocketParentId";
-      persistent.style.cssText = "display:none;width:100%;height:100%;flex:1;min-height:0;";
-      document.body.appendChild(persistent);
-    }
+    const parent = document.getElementById(VIASOCKET_PARENT_ID);
     const slot = embedSlotRef.current;
-    if (slot && !slot.contains(persistent)) {
-      persistent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;display:flex;";
-      slot.appendChild(persistent);
+    if (parent && slot && !slot.contains(parent)) {
+      parent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;display:flex;";
+      slot.appendChild(parent);
     }
     return () => {
-      // Park into a zero-size hidden container so the embed script cannot show it
-      let prison = document.getElementById("__viasocket_prison__");
-      if (!prison) {
-        prison = document.createElement("div");
-        prison.id = "__viasocket_prison__";
-        prison.style.cssText = "position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;top:0;left:0;";
-        document.body.appendChild(prison);
-      }
-      if (persistent) prison.appendChild(persistent);
+      const p = document.getElementById(VIASOCKET_PARENT_ID);
+      if (!p) return;
+      p.style.cssText =
+        "position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;top:0;left:0;";
+      document.body.appendChild(p);
     };
-  }, []);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!embedToken) return;
-
-    const scriptId = process.env.NEXT_PUBLIC_EMBED_SCRIPT_ID!;
-    const alreadyLoaded = !!document.getElementById(scriptId);
-    if (alreadyLoaded) {
-      let cancelled = false;
-      const interval = setInterval(() => {
-        if (cancelled) return clearInterval(interval);
-        if (!(window as any).openViasocket) return;
-        clearInterval(interval);
-        (window as any).openViasocket(undefined, { embedToken });
-      }, 50);
-      return () => { cancelled = true; clearInterval(interval); };
-    }
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = process.env.NEXT_PUBLIC_EMBED_SCRIPT_SRC!;
-    script.setAttribute("embedToken", embedToken);
-    script.setAttribute("parentId", "viasocketParentId");
-    document.body.appendChild(script);
+    let cancelled = false;
+    const interval = setInterval(() => {
+      if (cancelled) return clearInterval(interval);
+      if (!(window as any).openViasocket) return;
+      clearInterval(interval);
+      (window as any).openViasocket(undefined, { embedToken });
+    }, 50);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [embedToken, cluster.id]);
 
   useEffect(() => {
@@ -523,6 +605,29 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [cluster.id, dispatch]);
+
+  useLayoutEffect(() => {
+    if (!hasPublishedTools) return;
+    const parent = document.getElementById(CHATBOT_PARENT_ID);
+    const slot = chatbotSlotRef.current;
+    if (parent && slot && !slot.contains(parent)) {
+      parent.style.cssText = "width:100%;height:100%;flex:1;min-height:0;display:flex;";
+      slot.appendChild(parent);
+    }
+    return () => {
+      const p = document.getElementById(CHATBOT_PARENT_ID);
+      if (!p) return;
+      p.style.cssText =
+        "position:fixed;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;top:0;left:0;";
+      document.body.appendChild(p);
+    };
+  }, [isDesktop, hasPublishedTools]);
+
+  // Whenever the cluster changes, ask the already-loaded chatbot to switch thread.
+  useEffect(() => {
+    if (!cluster.url) return;
+    updateChatbotThread(cluster.id);
+  }, [cluster.id]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -597,34 +702,127 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
                   {cluster.name}
                 </h2>
               </div>
-              <div ref={accountRef} className="relative">
-                {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
-                <button
-                  data-testid="cluster-account-button"
-                  onClick={() => setShowAccount((v) => !v)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
-                >
-                  <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
-                </button>
+              <div className="flex items-center gap-2">
+                <div ref={accountRef} className="relative">
+                  {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+                  <button
+                    data-testid="cluster-account-button"
+                    onClick={() => setShowAccount((v) => !v)}
+                    className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                    style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                  >
+                    <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Content — stacked full width */}
-      <div className="flex-1 min-h-0 px-3 sm:px-6 md:px-16 lg:px-24 max-w-[1400px] mx-auto w-full pt-3 sm:pt-4 flex flex-col gap-2 h-full overflow-hidden">
+      {/* Mobile-only tab bar */}
+      <div
+        role="tablist"
+        className="md:hidden flex shrink-0 px-2"
+        style={{ borderBottom: "1px solid rgb(226,232,240)" }}
+      >
+        {([
+          { id: "mushrooms" as const, label: "Mushrooms" },
+          { id: "testing" as const, label: hasPublishedTools ? "Testing" : "Setup" },
+        ]).map((t) => {
+          const active = mobileTab === t.id;
+          return (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={active}
+              data-testid={`mobile-tab-${t.id}`}
+              onClick={() => setMobileTab(t.id)}
+              className="flex-1 cursor-pointer"
+              style={{
+                padding: "10px 12px",
+                background: "transparent",
+                border: "none",
+                borderBottom: active ? "2px solid rgb(10,10,10)" : "2px solid transparent",
+                marginBottom: -1,
+                color: active ? "rgb(10,10,10)" : "rgb(120,132,154)",
+                fontFamily: "Geist, sans-serif",
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Embed — always open */}
-        <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
-          <div ref={embedSlotRef} className="flex-1 min-h-0 w-full" />
-        </div>
-
-        {/* Configuration panel */}
-        <div className="w-full shrink-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, overflow: "hidden" }}>
-          <InlineConfigSection cluster={cluster} onChangeClient={onChangeClient} hasTools={hasTools} />
-        </div>
+      {/* Content — resizable split on desktop; tab-switched on mobile */}
+      <div className="flex-1 min-h-0 px-2 sm:px-3 w-full pt-2 sm:pt-4 h-full overflow-hidden">
+        {isDesktop ? (
+          <Group orientation="horizontal" className="h-full w-full">
+            <Panel defaultSize="70%" minSize="30%">
+              <div className="flex flex-col gap-2 h-full min-h-0 overflow-hidden w-full" style={{ minWidth: 0 }}>
+                <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+                  <div ref={embedSlotRef} className="flex-1 min-h-0 w-full" />
+                </div>
+                {hasPublishedTools && (
+                  <div className="w-full shrink-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, overflow: "hidden" }}>
+                    <InlineConfigSection cluster={cluster} onChangeClient={onChangeClient} hasTools={hasTools} />
+                  </div>
+                )}
+              </div>
+            </Panel>
+            <Separator
+              className="cluster-resize-handle"
+              style={{
+                width: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "col-resize",
+              }}
+            >
+              <div style={{ width: 4, height: 40, background: "rgb(226,232,240)", borderRadius: 2 }} />
+            </Separator>
+            <Panel defaultSize="30%" minSize="20%">
+              <div className="flex flex-col h-full min-h-0 w-full relative" style={{ minWidth: 0, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+                {hasPublishedTools ? (
+                  <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" />
+                ) : (
+                  <SetupGuide cluster={cluster} />
+                )}
+              </div>
+            </Panel>
+          </Group>
+        ) : (
+          <div className="flex flex-row gap-3 h-full w-full">
+            <div
+              className={`${showChatbotMobile ? "hidden" : "flex"} flex-col gap-2 h-full min-h-0 overflow-hidden w-full`}
+              style={{ minWidth: 0 }}
+            >
+              <div className="w-full flex-1 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
+                <div ref={embedSlotRef} className="flex-1 min-h-0 w-full" />
+              </div>
+              {hasPublishedTools && (
+                <div className="w-full shrink-0 flex flex-col" style={{ background: "rgb(255,255,255)", border: "1px solid rgb(226,232,240)", borderRadius: 8, overflow: "hidden" }}>
+                  <InlineConfigSection cluster={cluster} onChangeClient={onChangeClient} hasTools={hasTools} />
+                </div>
+              )}
+            </div>
+            <div
+              className={`${showChatbotMobile ? "flex" : "hidden"} flex-col h-full min-h-0 w-full relative`}
+              style={{ minWidth: 0, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}
+            >
+              {hasPublishedTools ? (
+                <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" />
+              ) : (
+                <SetupGuide cluster={cluster} />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,11 +3,13 @@ import { toolApi } from "../api/toolApi";
 
 interface ToolsState {
   countByMcpServerId: Record<string, number>;
+  publishedCountByMcpServerId: Record<string, number>;
   loadingFor: Record<string, boolean>;
 }
 
 const initialState: ToolsState = {
   countByMcpServerId: {},
+  publishedCountByMcpServerId: {},
   loadingFor: {},
 };
 
@@ -16,8 +18,10 @@ export const fetchTools = createAsyncThunk(
   async ({ mcpServerId }: { mcpServerId: string }, { rejectWithValue }) => {
     try {
       const toolsRes = await toolApi.getTools(mcpServerId);
-      const count = (toolsRes.data?.data ?? []).length;
-      return { mcpServerId, count };
+      const list = toolsRes.data?.data ?? [];
+      const count = list.length;
+      const publishedCount = list.filter((t) => (t.status ?? "").toLowerCase() !== "draft").length;
+      return { mcpServerId, count, publishedCount };
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Unknown error");
     }
@@ -34,8 +38,9 @@ const toolsSlice = createSlice({
         state.loadingFor[action.meta.arg.mcpServerId] = true;
       })
       .addCase(fetchTools.fulfilled, (state, action) => {
-        const { mcpServerId, count } = action.payload;
+        const { mcpServerId, count, publishedCount } = action.payload;
         state.countByMcpServerId[mcpServerId] = count;
+        state.publishedCountByMcpServerId[mcpServerId] = publishedCount;
         state.loadingFor[mcpServerId] = false;
       })
       .addCase(fetchTools.rejected, (state, action) => {
