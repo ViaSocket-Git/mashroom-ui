@@ -17,6 +17,7 @@ export interface ApiCluster {
 
 export interface ApiClusterListResponse {
   data: ApiCluster[];
+  chatbotEmbedToken?: string;
 }
 
 export interface ApiClusterResponse {
