@@ -507,7 +507,7 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
       </div>}
       {showVideo && videoSrc && (
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center"
+          className="fixed inset-0 z-[999999999] flex items-center justify-center"
           style={{ backdropFilter: "blur(4px)", background: "rgba(255,255,255,0.3)", padding: "0 50px" }}
           onClick={() => setShowVideo(false)}
         >
