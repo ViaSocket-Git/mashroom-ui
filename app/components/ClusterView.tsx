@@ -26,11 +26,13 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-function updateChatbotThread(threadId: string) {
+type McpConfig = { name: string; url: string }[];
+
+function updateChatbotThread(threadId: string, mcpConfig: McpConfig) {
   const tryUpdate = (attempts = 0) => {
     const cb = (window as any).Chatbot;
     if (cb && typeof cb.sendData === "function") {
-      cb.sendData({ threadId});
+      cb.sendData({ threadId, mcpConfig });
     } else if (attempts < 40) {
       setTimeout(() => tryUpdate(attempts + 1), 100);
     }
@@ -626,8 +628,11 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   // Whenever the cluster changes, ask the already-loaded chatbot to switch thread.
   useEffect(() => {
     if (!cluster.url) return;
-    updateChatbotThread(cluster.id);
-  }, [cluster.id]);
+    const mcpConfig: McpConfig = [
+      { name: (cluster.name || "mushrooms").replace(/\s+/g, "_"), url: cluster.url },
+    ];
+    updateChatbotThread(cluster.id, mcpConfig);
+  }, [cluster.id, cluster.url, cluster.name]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
