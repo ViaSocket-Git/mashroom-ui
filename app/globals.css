@@ -126,6 +126,15 @@
   overflow: hidden !important;
 }
 
+/* Chatbot z-index override to ensure video modal appears on top */
+#mushroom-test-chatbot-parent,
+#mushroom-test-chatbot-parent *,
+#mushroom-test-chatbot-parent div,
+#mushroom-test-chatbot-parent iframe,
+#mushroom-test-chatbot-parent button {
+  z-index: 1 !important;
+}
+
 #viasocketParentId .right_slider-viasocket-display-none,
 #viasocketParentId .right_slider-viasocket-embed-parent-container {
   display: flex !important;
