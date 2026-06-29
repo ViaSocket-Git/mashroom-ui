@@ -30,9 +30,9 @@ type McpConfig = { name: string; url: string }[];
 
 function updateChatbotThread(threadId: string, mcpConfig: McpConfig) {
   const tryUpdate = (attempts = 0) => {
-    const cb = (window as any).Chatbot;
-    if (cb && typeof cb.sendData === "function") {
-      cb.sendData({ threadId, mcpConfig });
+    const fn = (window as any).SendDataToChatbot;
+    if (typeof fn === "function") {
+      fn({ threadId, mcpConfig });
     } else if (attempts < 40) {
       setTimeout(() => tryUpdate(attempts + 1), 100);
     }
@@ -626,13 +626,14 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   }, [isDesktop, hasPublishedTools]);
 
   // Whenever the cluster changes, ask the already-loaded chatbot to switch thread.
+  // hasPublishedTools is included in deps so we re-send after RTLayer is open.
   useEffect(() => {
     if (!cluster.url) return;
     const mcpConfig: McpConfig = [
       { name: (cluster.name || "mushrooms").replace(/\s+/g, "_"), url: cluster.url },
     ];
     updateChatbotThread(cluster.id, mcpConfig);
-  }, [cluster.id, cluster.url, cluster.name]);
+  }, [cluster.id, cluster.url, cluster.name, hasPublishedTools]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
