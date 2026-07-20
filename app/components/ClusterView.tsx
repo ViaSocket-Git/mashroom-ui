@@ -625,6 +625,20 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
     };
   }, [isDesktop, hasPublishedTools]);
 
+  // Open chatbot when hasPublishedTools becomes true
+  useEffect(() => {
+    if (!hasPublishedTools) return;
+    const tryOpen = (attempts = 0) => {
+      const fn = (window as any).openChatbot;
+      if (typeof fn === "function") {
+        fn();
+      } else if (attempts < 40) {
+        setTimeout(() => tryOpen(attempts + 1), 100);
+      }
+    };
+    tryOpen();
+  }, [hasPublishedTools]);
+
   // Whenever the cluster changes, ask the already-loaded chatbot to switch thread.
   // hasPublishedTools is included in deps so we re-send after RTLayer is open.
   useEffect(() => {
@@ -794,11 +808,9 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
             </Separator>
             <Panel defaultSize="30%" minSize="20%">
               <div className="flex flex-col h-full min-h-0 w-full relative" style={{ minWidth: 0, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}>
-                {hasPublishedTools ? (
-                  <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" />
-                ) : (
-                  <SetupGuide cluster={cluster} />
-                )}
+                {/* Keep the chatbot slot mounted so the iframe never reloads; overlay SetupGuide when no tools. */}
+                <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" style={{ display: hasPublishedTools ? "flex" : "none" }} />
+                {!hasPublishedTools && <SetupGuide cluster={cluster} />}
               </div>
             </Panel>
           </Group>
@@ -821,11 +833,8 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
               className={`${showChatbotMobile ? "flex" : "hidden"} flex-col h-full min-h-0 w-full relative`}
               style={{ minWidth: 0, background: "#fff", border: "1px solid rgb(226,232,240)", borderRadius: 8, boxShadow: "rgba(0,0,0,0.04) 0px 1px 3px", overflow: "hidden" }}
             >
-              {hasPublishedTools ? (
-                <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" />
-              ) : (
-                <SetupGuide cluster={cluster} />
-              )}
+              <div ref={chatbotSlotRef} className="flex-1 min-h-0 w-full flex" style={{ display: hasPublishedTools ? "flex" : "none" }} />
+              {!hasPublishedTools && <SetupGuide cluster={cluster} />}
             </div>
           </div>
         )}
