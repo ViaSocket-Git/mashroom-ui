@@ -58,6 +58,7 @@ function LoginPageInner({ loading }: { loading: boolean }) {
   const utmCampaign = urlParams.get("utm_campaign");
   const utmTerm = urlParams.get("utm_term");
   const utmContent = urlParams.get("utm_content");
+  const isNewUser = urlParams.get("is_new_user");
 
   useEffect(() => {
     if (utmSource) setInCookies("utm_source", utmSource);
@@ -65,7 +66,8 @@ function LoginPageInner({ loading }: { loading: boolean }) {
     if (utmCampaign) setInCookies("utm_campaign", utmCampaign);
     if (utmTerm) setInCookies("utm_term", utmTerm);
     if (utmContent) setInCookies("utm_content", utmContent);
-  }, [utmSource, utmMedium, utmCampaign, utmTerm, utmContent]);
+    if (isNewUser !== null) setInCookies("is_new_user", isNewUser);
+  }, [utmSource, utmMedium, utmCampaign, utmTerm, utmContent, isNewUser]);
 
   useEffect(() => {
     integrationsApi.getAppsCount()

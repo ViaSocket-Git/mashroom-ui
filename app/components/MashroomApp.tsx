@@ -20,6 +20,7 @@ import {
 import { fetchAiClients } from "@/lib/features/aiClientsSlice";
 import type { AiClient } from "@/lib/features/aiClientsSlice";
 import { posthog, trackEvent, identifyUser } from "@/lib/analytics/posthog";
+import { getFromCookies, removeCookie } from "@/lib/utils/cookies";
 
 function EmptyAccountButton() {
   const [showAccount, setShowAccount] = useState(false);
@@ -59,6 +60,7 @@ export default function MashroomApp() {
   const userEmail = useAppSelector((s) => s.clusters.userEmail);
 
   const [hasFetched, setHasFetched] = useState(false);
+  const signupNotifiedRef = useRef(false);
 
   useEffect(() => {
     const init = async () => {
@@ -92,6 +94,25 @@ export default function MashroomApp() {
       });
     }
   }, [userId, userName, userEmail, clusters.length]);
+
+  // Notify the signup webhook with the user's utm data, but only once per new user.
+  useEffect(() => {
+    if (!userId) return;
+    if(!getFromCookies("is_new_user")) return;
+    if (signupNotifiedRef.current) return;
+    signupNotifiedRef.current = true;
+
+    setTimeout(() => {
+      const utmSource = getFromCookies("utm_source");
+      fetch("https://flow.sokt.io/func/scriXXdRwphM", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: { user: { id: userId, ...(utmSource ? { utm_source: utmSource } : {}) } } }),
+      })
+        .then(() => removeCookie("is_new_user"))
+        .catch((err) => console.error("[MashroomApp] signup webhook error:", err));
+    }, 20000);
+  }, [userId]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"newCluster" | "addPowerUp" | "changeClient">("newCluster");
