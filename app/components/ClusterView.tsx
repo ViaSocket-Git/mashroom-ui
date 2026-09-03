@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { X, Copy, Check, User, Play, Menu, MessageSquare } from "lucide-react";
+import { X, Copy, Check, User, Play, Menu, MessageSquare, BookOpen } from "lucide-react";
 
 import AccountPanel from "./AccountPanel";
+import SkillsModal from "./SkillsModal";
 import { useAppSelector, useAppDispatch } from "../../lib/hooks";
 import { fetchTools } from "../../lib/features/toolsSlice";
+import { fetchClusterSkills } from "../../lib/features/skillsSlice";
 import { toolApi } from "../../lib/api/toolApi";
 
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -532,9 +534,52 @@ function InlineConfigSection({ cluster, onChangeClient, hasTools }: { cluster: C
   );
 }
 
+function SkillsButton({ count, onClick }: { count: number; onClick: () => void }) {
+  return (
+    <button
+      data-testid="cluster-skills-button"
+      onClick={onClick}
+      title="Manage skills"
+      className="flex items-center gap-1.5 cursor-pointer shrink-0"
+      style={{
+        height: 36,
+        padding: "0 12px",
+        borderRadius: 8,
+        border: "1px solid rgb(226,232,240)",
+        background: "#fff",
+        color: "rgb(10,10,10)",
+        fontFamily: "Geist, sans-serif",
+        fontSize: 13,
+        fontWeight: 600,
+        letterSpacing: "-0.01em",
+      }}
+    >
+      <BookOpen width={14} height={14} strokeWidth={2} />
+      <span className="hidden sm:inline">Skills</span>
+      {count > 0 && (
+        <span
+          style={{
+            fontFamily: '"Geist Mono", monospace',
+            fontSize: 10.5,
+            fontWeight: 700,
+            color: "#fff",
+            background: "rgb(10,10,10)",
+            borderRadius: 999,
+            padding: "1px 6px",
+            lineHeight: 1.5,
+          }}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hideSidebar, onMenuClick }: ClusterViewProps) {
   const dispatch = useAppDispatch();
   const [showAccount, setShowAccount] = useState(false);
+  const [showSkills, setShowSkills] = useState(false);
   const [mobileTab, setMobileTab] = useState<"mushrooms" | "testing">("mushrooms");
   const showChatbotMobile = mobileTab === "testing";
   const isDesktop = useIsDesktop();
@@ -546,7 +591,13 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
   const publishedToolCount = useAppSelector((s) => s.tools.publishedCountByMcpServerId[cluster.id] ?? 0);
   const hasTools = toolCount > 0;
   const hasPublishedTools = publishedToolCount > 0;
+  const connectedSkillCount = useAppSelector((s) => s.skills.connectedIdsByClusterId[cluster.id]?.length ?? 0);
   const embedSlotRef = useRef<HTMLDivElement>(null);
+
+  // Keep the header's skill count honest when the cluster changes.
+  useEffect(() => {
+    dispatch(fetchClusterSkills({ mcpServerId: cluster.id }));
+  }, [dispatch, cluster.id]);
 
   useLayoutEffect(() => {
     const parent = document.getElementById(VIASOCKET_PARENT_ID);
@@ -684,16 +735,19 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
                 <span className="text-[10px] tracking-widest uppercase" style={{ color: "rgb(148,163,184)" }}>by viasocket</span>
               </div>
             </a>
-            <div ref={accountRef} className="relative">
-              {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
-              <button
-                data-testid="cluster-account-button"
-                onClick={() => setShowAccount((v) => !v)}
-                className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
-              >
-                <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
-              </button>
+            <div className="flex items-center gap-2">
+              <SkillsButton count={connectedSkillCount} onClick={() => setShowSkills(true)} />
+              <div ref={accountRef} className="relative">
+                {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
+                <button
+                  data-testid="cluster-account-button"
+                  onClick={() => setShowAccount((v) => !v)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{ background: showAccount ? "rgb(10,10,10)" : "rgb(30,30,30)", border: "none", flexShrink: 0 }}
+                >
+                  <User width={15} height={15} strokeWidth={2} style={{ color: "#fff" }} />
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -723,6 +777,7 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
                 </h2>
               </div>
               <div className="flex items-center gap-2">
+                <SkillsButton count={connectedSkillCount} onClick={() => setShowSkills(true)} />
                 <div ref={accountRef} className="relative">
                   {showAccount && <AccountPanel onClose={() => setShowAccount(false)} />}
                   <button
@@ -839,6 +894,14 @@ export default function ClusterView({ cluster, onAddPowerUp, onChangeClient, hid
           </div>
         )}
       </div>
+
+      {showSkills && (
+        <SkillsModal
+          clusterId={cluster.id}
+          clusterName={cluster.name}
+          onClose={() => setShowSkills(false)}
+        />
+      )}
     </div>
   );
 }
